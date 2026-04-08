@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { UrlBar } from '@/components/viewer/UrlBar';
 import { ContentViewer } from '@/components/viewer/ContentViewer';
 import { VideoQA } from '@/components/viewer/VideoQA';
@@ -47,8 +48,14 @@ export default function HomePage() {
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary-light to-primary text-lg text-white font-bold">
-                {displayName.charAt(0)}
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-hover overflow-hidden">
+                <Image
+                  src="/characters/phil-default.png"
+                  alt={displayName}
+                  width={44}
+                  height={44}
+                  className="object-contain"
+                />
               </div>
               <div>
                 <h2 className="font-semibold text-foreground text-base">{displayName}</h2>

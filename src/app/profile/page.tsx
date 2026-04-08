@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useHydration } from '@/stores/use-hydration';
@@ -41,8 +42,14 @@ export default function ProfilePage() {
         {/* 性格カード */}
         <div className="mb-6 rounded-2xl border border-border bg-surface p-5 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-2xl">
-              🌱
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-hover overflow-hidden">
+              <Image
+                src="/characters/phil-default.png"
+                alt={displayName}
+                width={48}
+                height={48}
+                className="object-contain"
+              />
             </div>
             <div>
               <h2 className="text-lg font-bold text-foreground">{displayName}</h2>
