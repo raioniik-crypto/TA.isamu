@@ -14,6 +14,7 @@ const BETA_BADGE = (
 );
 
 export function VideoQA() {
+  // ─── すべての hooks をコンポーネント先頭で無条件に呼ぶ ───
   const content = useViewerStore((s) => s.content);
   const session = useWatchingStore((s) => s.session);
   const addMessage = useWatchingStore((s) => s.addMessage);
@@ -28,28 +29,36 @@ export function VideoQA() {
   const [manualText, setManualText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // YouTube以外 or コンテンツなしなら非表示
-  if (!content || content.type !== 'youtube') return null;
-
-  const hasTranscript = !!content.body;
-  const hasSession = !!session && session.videoId === content.youtubeId;
+  const isYouTube = !!content && content.type === 'youtube';
+  const hasTranscript = isYouTube && !!content.body;
+  const videoId = isYouTube ? content.youtubeId : undefined;
+  const hasSession = !!session && !!videoId && session.videoId === videoId;
   const hasSessionText = hasSession && session.transcript.length > 0;
+  const messagesLength = session?.messages.length ?? 0;
 
   // セッション自動開始: 字幕が自動取得できていたら即セッション開始
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
-    if (content.youtubeId && hasTranscript && !hasSession) {
-      startSession(content.youtubeId, content.body!, 'auto');
+    if (!isYouTube || !videoId || !hasTranscript || hasSession) return;
+    startSession(videoId, content.body!, 'auto');
+  }, [isYouTube, videoId, hasTranscript, hasSession, content?.body, startSession]);
+
+  // メッセージ追加時に自動スクロール
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [content.youtubeId, hasTranscript, hasSession, content.body, startSession]);
+  }, [messagesLength]);
+
+  // ─── 早期 return は hooks の後ろ ───
+  if (!isYouTube) return null;
 
   const handleManualSubmit = () => {
     const text = manualText.trim();
-    if (!text || !content.youtubeId) return;
+    if (!text || !videoId) return;
     if (hasSession) {
       updateTranscript(text, 'manual');
     } else {
-      startSession(content.youtubeId, text, 'manual');
+      startSession(videoId, text, 'manual');
     }
     setManualText('');
   };
@@ -69,7 +78,6 @@ export function VideoQA() {
     setQuestion('');
 
     try {
-      // session は hasSessionText チェック済みなので non-null
       const allMessages = [...session!.messages, userMsg];
       const res = await fetch('/api/video-qa', {
         method: 'POST',
@@ -111,14 +119,6 @@ export function VideoQA() {
       setIsAsking(false);
     }
   };
-
-  // メッセージ追加時に自動スクロール
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [session?.messages.length]);
 
   return (
     <motion.div
