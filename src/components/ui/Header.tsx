@@ -20,8 +20,6 @@ export function Header() {
   const aiName = useSettingsStore((s) => s.aiName);
   const totalInteractions = useAIProfileStore((s) => s.totalInteractions);
 
-  const isHome = pathname === '/';
-
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/85 backdrop-blur-md">
       {/* 上段: ロゴ + ナビ */}
@@ -58,12 +56,10 @@ export function Header() {
         </nav>
       </div>
 
-      {/* 下段: ブラウザバー（ホームのみ表示） */}
-      {isHome && (
-        <div className="mx-auto max-w-5xl px-4 pb-2">
-          <BrowserBar />
-        </div>
-      )}
+      {/* 下段: ブラウザバー（常時表示） */}
+      <div className="mx-auto max-w-5xl px-4 pb-2">
+        <BrowserBar />
+      </div>
     </header>
   );
 }

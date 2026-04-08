@@ -1,7 +1,6 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
 import { ContentViewer } from '@/components/viewer/ContentViewer';
 import { VideoQA } from '@/components/viewer/VideoQA';
 import { ViewerAnalysis } from '@/components/viewer/ViewerAnalysis';
@@ -47,7 +46,7 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      {/* コンテンツ非表示時 → ブラウザホーム画面 */}
+      {/* 未閲覧時 → ブラウザホーム */}
       {!hasContent && (
         <BrowserHome
           displayName={displayName}
@@ -56,24 +55,19 @@ export default function HomePage() {
         />
       )}
 
-      {/* コンテンツ表示時 → ブラウザ閲覧モード */}
+      {/* 閲覧時 → コンテンツ + 解析パネル */}
       {hasContent && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="mt-4 space-y-4"
         >
-          {/* メイン閲覧エリア */}
           <ContentViewer />
 
-          {/* AI解析パネル（横並び可能に） */}
+          {/* 解析パネル: モバイル縦積み / デスクトップ横並び */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <VideoQA />
-            </div>
-            <div className="space-y-4">
-              <ViewerAnalysis />
-            </div>
+            <VideoQA />
+            <ViewerAnalysis />
           </div>
         </motion.div>
       )}
