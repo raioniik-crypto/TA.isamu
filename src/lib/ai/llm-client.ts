@@ -21,7 +21,7 @@ async function callOpenAI(req: LLMRequest): Promise<LLMResponse> {
       model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
       messages: req.messages,
       temperature: req.temperature ?? 0.7,
-      max_tokens: req.maxTokens ?? 1024,
+      max_completion_tokens: req.maxTokens ?? 1024,
     }),
   });
 
