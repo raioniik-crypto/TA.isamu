@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const content = await extractPageContent(url);
 
     // 解析プロンプトを構築
-    const systemPrompt = buildSystemPrompt(aiName || 'イサム', growthParams);
+    const systemPrompt = buildSystemPrompt(aiName || 'アイモ', growthParams);
     const analysisPrompt = buildAnalysisPrompt(content, type || 'summary', url);
 
     const response = await callLLM({

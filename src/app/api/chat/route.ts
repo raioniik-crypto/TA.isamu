@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'messages is required' }, { status: 400 });
     }
 
-    const systemPrompt = buildSystemPrompt(aiName || 'イサム', growthParams);
+    const systemPrompt = buildSystemPrompt(aiName || 'アイモ', growthParams);
     const llmMessages = [
       { role: 'system', content: systemPrompt },
       ...messages.slice(-20), // 直近20件に制限

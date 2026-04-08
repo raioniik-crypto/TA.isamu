@@ -3,7 +3,7 @@ import './globals.css';
 import { ClientProviders } from './providers';
 
 export const metadata: Metadata = {
-  title: 'TA.isamu - AI育成型ブラウジングパートナー',
+  title: 'Aimo - AI育成型ブラウジングパートナー',
   description:
     'AIキャラクターと一緒にWebを探検し、共に学び、共に育つプラットフォーム',
 };

@@ -17,7 +17,7 @@ export default function HomePage() {
   const totalInteractions = useAIProfileStore((s) => s.totalInteractions);
 
   const displayParams = hydrated ? params : DEFAULT_GROWTH_PARAMS;
-  const displayName = hydrated ? aiName : 'イサム';
+  const displayName = hydrated ? aiName : 'アイモ';
   const displayCount = hydrated ? totalInteractions : 0;
   const personality = derivePersonality(displayParams);
 
@@ -30,7 +30,7 @@ export default function HomePage() {
         className="mb-10 text-center"
       >
         <h1 className="mb-1.5 text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-          TA.isamu
+          Aimo
         </h1>
         <p className="text-[15px] text-muted">
           {displayName}と一緒にWebを探検しよう

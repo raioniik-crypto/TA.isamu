@@ -33,7 +33,7 @@ export function SettingsForm() {
     chatStore.clearAll();
     diaryStore.clearAll();
     settings.reset();
-    setName('イサム');
+    setName('アイモ');
     setShowDeleteConfirm(false);
   };
 
@@ -89,7 +89,7 @@ export function SettingsForm() {
         </h3>
         <div className="text-xs text-muted space-y-2 leading-relaxed">
           <p>
-            TA.isamu は、あなたのデータをブラウザ内（localStorage）に保存します。
+            Aimo は、あなたのデータをブラウザ内（localStorage）に保存します。
             サーバーにデータが送信されることはありません（チャットAPIへの送信を除く）。
           </p>
           <p>

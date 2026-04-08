@@ -24,7 +24,7 @@ export default function ProfilePage() {
   const aiName = useSettingsStore((s) => s.aiName);
 
   const displayParams = hydrated ? params : DEFAULT_GROWTH_PARAMS;
-  const displayName = hydrated ? aiName : 'イサム';
+  const displayName = hydrated ? aiName : 'アイモ';
   const displayCount = hydrated ? totalInteractions : 0;
   const personality = derivePersonality(displayParams);
 

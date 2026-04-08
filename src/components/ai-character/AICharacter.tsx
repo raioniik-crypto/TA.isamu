@@ -28,7 +28,7 @@ export function AICharacter() {
   const aiName = useSettingsStore((s) => s.aiName);
   const isSending = useChatStore((s) => s.isSending);
 
-  const displayName = hydrated ? aiName : 'イサム';
+  const displayName = hydrated ? aiName : 'アイモ';
 
   // hydration完了後にあいさつ吹き出し
   useEffect(() => {

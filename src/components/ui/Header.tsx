@@ -24,7 +24,7 @@ export function Header() {
       <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-bold text-primary">
           <span className="text-xl">🌱</span>
-          <span className="hidden sm:inline text-base tracking-tight">TA.isamu</span>
+          <span className="hidden sm:inline text-base tracking-tight">Aimo</span>
           {hydrated && (
             <span className="text-[11px] text-muted font-normal ml-0.5 hidden sm:inline">
               with {aiName}

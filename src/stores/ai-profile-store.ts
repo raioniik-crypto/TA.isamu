@@ -29,7 +29,7 @@ interface AIProfileState extends AIProfile {
 
 const initialProfile: AIProfile = {
   id: uuidv4(),
-  name: 'イサム',
+  name: 'アイモ',
   params: { ...DEFAULT_GROWTH_PARAMS },
   totalInteractions: 0,
   createdAt: new Date().toISOString(),

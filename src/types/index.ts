@@ -1,5 +1,5 @@
 // ============================================================
-// Core domain types for TA.isamu - AI育成型ブラウジングプラットフォーム
+// Core domain types for Aimo - AI育成型ブラウジングプラットフォーム
 // ============================================================
 
 /** 育成パラメータ（0.0〜1.0） */
@@ -95,7 +95,7 @@ export interface AppSettings {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  aiName: 'イサム',
+  aiName: 'アイモ',
   theme: 'light',
   privacyAcknowledged: false,
 };
