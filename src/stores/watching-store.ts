@@ -7,6 +7,8 @@ export interface QAMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  /** AI回答時に参照した字幕断片 */
+  excerpts?: string[];
   createdAt: string;
 }
 

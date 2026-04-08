@@ -98,12 +98,13 @@ export function VideoQA() {
         throw new Error(data.error || '回答の取得に失敗しました。');
       }
 
-      const data: { content: string } = await res.json();
+      const data: { content: string; excerpts?: string[] } = await res.json();
 
       const assistantMsg: QAMessage = {
         id: `a-${Date.now()}`,
         role: 'assistant',
         content: data.content,
+        excerpts: data.excerpts,
         createdAt: new Date().toISOString(),
       };
       addMessage(assistantMsg);
@@ -252,6 +253,22 @@ function MessageBubble({ message, aiName }: { message: QAMessage; aiName: string
           </span>
         )}
         <p className="whitespace-pre-wrap">{message.content}</p>
+        {/* 参照した字幕断片 */}
+        {!isUser && message.excerpts && message.excerpts.length > 0 && (
+          <div className="mt-2 pt-1.5 border-t border-border/50">
+            <p className="text-[10px] font-medium text-muted mb-1">参照した部分:</p>
+            <ul className="space-y-0.5">
+              {message.excerpts.map((excerpt, i) => (
+                <li
+                  key={i}
+                  className="text-[11px] text-muted/80 leading-snug pl-2 border-l-2 border-primary/30"
+                >
+                  {excerpt}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </motion.div>
   );
