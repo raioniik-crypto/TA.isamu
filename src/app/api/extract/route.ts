@@ -14,14 +14,16 @@ export async function POST(req: NextRequest) {
     const ytId = extractYouTubeId(url);
     if (ytId) {
       // 字幕の取得を試みる
-      const transcript = await fetchTranscript(ytId);
+      const result = await fetchTranscript(ytId);
 
       return NextResponse.json({
         url,
         title: 'YouTube動画',
         type: 'youtube' as const,
         youtubeId: ytId,
-        body: transcript ?? undefined,
+        body: result.ok ? result.text : undefined,
+        // 失敗理由を伝える: "no_captions" = 字幕なし, "fetch_failed" = 取得失敗
+        transcriptError: result.ok ? undefined : result.error,
       });
     }
 

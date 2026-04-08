@@ -123,6 +123,9 @@ export interface PersonalityExpression {
   tone: string;         // プロンプトに含める口調指示
 }
 
+/** 字幕取得の失敗理由 */
+export type TranscriptError = 'no_captions' | 'fetch_failed';
+
 /** ビューアで表示するコンテンツ */
 export interface ViewerContent {
   url: string;
@@ -132,4 +135,6 @@ export interface ViewerContent {
   body?: string;
   /** YouTubeの場合のvideo ID */
   youtubeId?: string;
+  /** YouTube字幕取得が失敗した場合の理由 */
+  transcriptError?: TranscriptError;
 }

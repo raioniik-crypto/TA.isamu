@@ -42,9 +42,16 @@ export function ViewerAnalysis() {
   // コンテンツがある場合のみ表示
   if (!content) return null;
 
-  // YouTube で字幕がない場合は解析不可の案内
+  // YouTube で字幕がない場合は解析不可の案内（理由に応じてメッセージを変える）
   const isYouTubeWithoutTranscript =
     content.type === 'youtube' && !content.body;
+  const transcriptErrorMessage = isYouTubeWithoutTranscript
+    ? content.transcriptError === 'no_captions'
+      ? 'この動画には字幕が設定されていないため、動画内容の解析はできません。字幕が有効な動画でお試しください。'
+      : content.transcriptError === 'fetch_failed'
+        ? '字幕の取得に失敗しました。時間をおいて再度お試しください。'
+        : 'この動画は字幕を取得できないため、動画内容の解析はできません。字幕が有効な動画でお試しください。'
+    : null;
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
@@ -103,8 +110,7 @@ export function ViewerAnalysis() {
       >
         {isYouTubeWithoutTranscript ? (
           <p className="text-[13px] text-muted leading-relaxed">
-            この動画は字幕を取得できないため、動画内容そのものの解析はできません。
-            字幕が有効な動画でお試しください。
+            {transcriptErrorMessage}
           </p>
         ) : (
           <>
