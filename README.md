@@ -234,7 +234,7 @@ src/
 │   ├── growth/           #   育成計算
 │   ├── page-reader/      #   ページ本文抽出
 │   └── storage/          #   保存の抽象レイヤー
-├── stores/               # Zustand状態管理
+├── stores/               # Zustand状態管理 + hydrationフック
 └── types/                # 共通の型定義
 ```
 
