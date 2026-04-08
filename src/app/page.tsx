@@ -1,7 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ReadPageButton } from '@/components/page-reader/ReadPageButton';
+import { UrlBar } from '@/components/viewer/UrlBar';
+import { ContentViewer } from '@/components/viewer/ContentViewer';
+import { ViewerAnalysis } from '@/components/viewer/ViewerAnalysis';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useHydration } from '@/stores/use-hydration';
@@ -62,13 +64,16 @@ export default function HomePage() {
         </motion.div>
       </motion.section>
 
-      {/* ページ読解セクション */}
+      {/* ビューアセクション */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
+        className="space-y-4"
       >
-        <ReadPageButton />
+        <UrlBar />
+        <ContentViewer />
+        <ViewerAnalysis />
       </motion.section>
 
       {/* ヒント */}
@@ -88,7 +93,7 @@ export default function HomePage() {
           </li>
           <li className="flex items-start gap-2.5">
             <span className="mt-0.5 text-primary shrink-0">2.</span>
-            URLを入力して「このページを見て」で記事を読んでもらえます
+            URLを入力して記事やYouTube動画をこのサイト内で開けます
           </li>
           <li className="flex items-start gap-2.5">
             <span className="mt-0.5 text-primary shrink-0">3.</span>

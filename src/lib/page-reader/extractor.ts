@@ -49,6 +49,39 @@ function validateUrl(url: string): void {
  * URLからページ本文を取得する
  */
 export async function extractPageContent(url: string): Promise<string> {
+  const { text } = await extractPage(url);
+  return text;
+}
+
+/**
+ * URLからページのタイトルを取得する（ビューア用）
+ */
+export async function extractPageTitle(url: string): Promise<string> {
+  const html = await fetchHtml(url);
+  return extractTitleFromHtml(html);
+}
+
+/**
+ * URLからページ本文とタイトルの両方を取得する
+ */
+export async function extractPage(url: string): Promise<{ text: string; title: string }> {
+  const html = await fetchHtml(url);
+  const text = htmlToText(html);
+
+  if (text.length < 50) {
+    throw new PageReadError(
+      'ページから十分なテキストを取得できませんでした。JavaScriptで内容を表示しているページ（YouTube、Twitterなど）は読み取りが難しい場合があります。ニュース記事やブログなどを試してみてください。',
+    );
+  }
+
+  const title = extractTitleFromHtml(html);
+  return { text, title };
+}
+
+/**
+ * HTMLを取得してバリデーション済みで返す
+ */
+async function fetchHtml(url: string): Promise<string> {
   validateUrl(url);
 
   let res: Response;
@@ -95,16 +128,7 @@ export async function extractPageContent(url: string): Promise<string> {
     );
   }
 
-  const html = await res.text();
-  const text = htmlToText(html);
-
-  if (text.length < 50) {
-    throw new PageReadError(
-      'ページから十分なテキストを取得できませんでした。JavaScriptで内容を表示しているページ（YouTube、Twitterなど）は読み取りが難しい場合があります。ニュース記事やブログなどを試してみてください。',
-    );
-  }
-
-  return text;
+  return await res.text();
 }
 
 /**
@@ -191,4 +215,21 @@ function extractSemanticContent(html: string): string | null {
   }
 
   return null;
+}
+
+/**
+ * HTMLから<title>タグのテキストを抽出
+ */
+function extractTitleFromHtml(html: string): string {
+  const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (!match) return '';
+  return match[1]
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .trim();
 }

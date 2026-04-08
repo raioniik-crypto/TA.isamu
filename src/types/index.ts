@@ -122,3 +122,14 @@ export interface PersonalityExpression {
   description: string;  // 例: "好奇心が強く、新しい話題に目を輝かせます"
   tone: string;         // プロンプトに含める口調指示
 }
+
+/** ビューアで表示するコンテンツ */
+export interface ViewerContent {
+  url: string;
+  title: string;
+  type: 'article' | 'youtube';
+  /** 記事の場合の抽出テキスト */
+  body?: string;
+  /** YouTubeの場合のvideo ID */
+  youtubeId?: string;
+}
