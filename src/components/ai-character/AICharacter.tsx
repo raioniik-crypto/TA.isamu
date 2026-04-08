@@ -17,7 +17,7 @@ const GREETINGS = [
 ];
 
 /**
- * 画面右下に常駐するAIキャラクター
+ * 画面右下に常駐するAIキャラクター（全身）
  * クリックでチャットパネルを開閉
  */
 export function AICharacter() {
@@ -64,7 +64,7 @@ export function AICharacter() {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-50">
+    <div className="fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-50">
       {/* チャットパネル */}
       <AnimatePresence>
         {isOpen && (
@@ -73,7 +73,7 @@ export function AICharacter() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="absolute bottom-[72px] right-0 w-[calc(100vw-2.5rem)] max-w-[400px]"
+            className="absolute bottom-[170px] right-0 w-[calc(100vw-2.5rem)] max-w-[400px]"
           >
             <ChatPanel
               onClose={() => setIsOpen(false)}
@@ -89,17 +89,15 @@ export function AICharacter() {
       {/* 吹き出し */}
       <ChatBubble message={greeting} visible={!isOpen && !!greeting} />
 
-      {/* アバター */}
-      <div className="flex items-end gap-2">
-        <CharacterAvatar
-          size={60}
-          isThinking={isSending}
-          onClick={() => {
-            setIsOpen(!isOpen);
-            setGreeting(null);
-          }}
-        />
-      </div>
+      {/* 全身キャラクター */}
+      <CharacterAvatar
+        size={100}
+        isThinking={isSending}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setGreeting(null);
+        }}
+      />
     </div>
   );
 }
