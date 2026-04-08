@@ -82,6 +82,31 @@ export function SettingsForm() {
         </button>
       </section>
 
+      {/* キャラクター移動モード */}
+      <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+        <h3 className="mb-3 text-sm font-semibold text-foreground">
+          キャラクターの動き
+        </h3>
+        <button
+          onClick={() => settings.update({ wanderMode: !settings.wanderMode })}
+          className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 text-sm transition-colors hover:bg-surface-hover w-full"
+        >
+          <span className="text-lg">
+            {settings.wanderMode ? '🚶' : '📌'}
+          </span>
+          <div className="text-left">
+            <span className="text-foreground block">
+              {settings.wanderMode ? '歩き回りモード' : '固定モード'}
+            </span>
+            <span className="text-[12px] text-muted leading-snug">
+              {settings.wanderMode
+                ? 'キャラクターが画面内を歩き回ります'
+                : 'キャラクターは右下に固定されます'}
+            </span>
+          </div>
+        </button>
+      </section>
+
       {/* プライバシー */}
       <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
         <h3 className="mb-3 text-sm font-semibold text-foreground">

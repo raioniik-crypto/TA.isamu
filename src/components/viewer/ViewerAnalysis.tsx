@@ -182,6 +182,7 @@ export function ViewerAnalysis() {
     <div className="space-y-3">
       {/* 解析コントロール */}
       <div
+        data-snap-target
         className="rounded-2xl border border-border bg-surface p-4"
         style={{ boxShadow: 'var(--shadow-sm)' }}
       >
@@ -245,6 +246,11 @@ export function ViewerAnalysis() {
             <p className="mb-3 text-[13px] font-medium text-muted">
               AIにこのページを解析してもらう
             </p>
+            {!result && (
+              <p className="mb-3 text-[12px] text-muted/70 leading-relaxed">
+                要約・言い換え・注意点・別の視点から解析できます。ボタンを選んで「解析する」を押してください。
+              </p>
+            )}
             {analysisControls}
           </>
         )}

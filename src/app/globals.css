@@ -11,7 +11,7 @@
   --surface: #ffffff;
   --surface-hover: #f0f2f8;
   --border: #e2e8f0;
-  --muted: #8892a8;
+  --muted: #64748b;
   --error: #ef4444;
   --success: #22c55e;
   --chat-user: #eef2ff;
@@ -107,4 +107,17 @@ button, a, input, textarea {
 ::selection {
   background: var(--primary-light);
   color: white;
+}
+
+/* Character blink animation */
+@keyframes aimo-blink {
+  0%, 92%, 96%, 100% { opacity: 1; }
+  94% { opacity: 0.82; }
+}
+
+/* Minimum font size on small screens */
+@media (max-width: 374px) {
+  body { font-size: 13px; }
+  .text-\[11px\] { font-size: 11px; }
+  .text-\[12px\] { font-size: 12px; }
 }
