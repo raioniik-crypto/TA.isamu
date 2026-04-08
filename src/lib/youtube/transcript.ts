@@ -13,12 +13,35 @@ const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 /** 字幕取得の失敗理由 */
-export type TranscriptError = 'no_captions' | 'fetch_failed';
+export type TranscriptError =
+  | 'no_captions'      // 動画に字幕が設定されていない
+  | 'fetch_failed'     // ネットワーク等の取得失敗
+  | 'blocked'          // YouTube側にブロック/拒否された
+  | 'parsing_failed'   // レスポンスのパースに失敗
+  | 'unknown';         // 不明な失敗
 
 /** 字幕取得の結果 */
 export type TranscriptResult =
   | { ok: true; text: string }
-  | { ok: false; error: TranscriptError };
+  | { ok: false; error: TranscriptError; detail: string };
+
+/** 診断ログの1エントリ */
+export interface DiagnosticEntry {
+  method: 'innertube' | 'html_scraping';
+  step: string;
+  status?: number;
+  ok: boolean;
+  detail: string;
+  responseSnippet?: string;
+}
+
+/** 診断ログ付き結果（デバッグ用） */
+export interface TranscriptDiagnostics {
+  videoId: string;
+  result: TranscriptResult;
+  logs: DiagnosticEntry[];
+  timestamp: string;
+}
 
 interface CaptionTrack {
   baseUrl: string;
@@ -28,49 +51,121 @@ interface CaptionTrack {
 }
 
 /**
- * YouTube動画の字幕テキストを取得する
- * 成功時は { ok: true, text } 、失敗時は { ok: false, error } を返す
+ * YouTube動画の字幕テキストを取得する（診断ログ付き）
  */
-export async function fetchTranscript(videoId: string): Promise<TranscriptResult> {
-  // --- Primary: innertube API ---
-  const innertubeResult = await fetchCaptionTracksViaInnertube(videoId);
-  if (innertubeResult) {
-    const url = pickBestCaptionUrl(innertubeResult);
-    if (!url) {
-      console.log(`[transcript] innertube: no suitable caption track for ${videoId}`);
-      return { ok: false, error: 'no_captions' };
+export async function fetchTranscriptWithDiagnostics(
+  videoId: string,
+): Promise<TranscriptDiagnostics> {
+  const logs: DiagnosticEntry[] = [];
+  const log = (entry: DiagnosticEntry) => {
+    logs.push(entry);
+    const prefix = `[transcript][${entry.method}]`;
+    const statusStr = entry.status ? ` (HTTP ${entry.status})` : '';
+    console.log(`${prefix} ${entry.step}${statusStr}: ${entry.ok ? 'OK' : 'FAIL'} — ${entry.detail}`);
+    if (entry.responseSnippet) {
+      console.log(`${prefix} response snippet: ${entry.responseSnippet}`);
     }
-    const text = await fetchAndParseTranscript(url);
-    if (text) return { ok: true, text };
-    console.warn(`[transcript] innertube: caption URL found but XML fetch failed for ${videoId}`);
-    // caption URL はあるが XML 取得に失敗 → fallback へ
+  };
+
+  // --- Primary: innertube API ---
+  const innertubeResult = await fetchCaptionTracksViaInnertube(videoId, log);
+  if (innertubeResult.tracks) {
+    log({
+      method: 'innertube',
+      step: 'caption_tracks_found',
+      ok: true,
+      detail: `Found ${innertubeResult.tracks.length} track(s): ${innertubeResult.tracks.map((t) => `${t.languageCode}${t.kind === 'asr' ? '(asr)' : ''}`).join(', ')}`,
+    });
+
+    const url = pickBestCaptionUrl(innertubeResult.tracks);
+    if (!url) {
+      log({ method: 'innertube', step: 'pick_caption', ok: false, detail: 'No suitable caption track in list' });
+      const result: TranscriptResult = { ok: false, error: 'no_captions', detail: 'innertube returned tracks but none suitable' };
+      return { videoId, result, logs, timestamp: new Date().toISOString() };
+    }
+
+    log({ method: 'innertube', step: 'pick_caption', ok: true, detail: `Selected URL: ${url.slice(0, 120)}...` });
+    const text = await fetchAndParseTranscript(url, 'innertube', log);
+    if (text) {
+      const result: TranscriptResult = { ok: true, text };
+      return { videoId, result, logs, timestamp: new Date().toISOString() };
+    }
+    // XML取得失敗 → fallback
+  } else if (innertubeResult.noCaptions) {
+    // innertube は成功したがcaptionTracksが空 → 字幕なし確定
+    log({ method: 'innertube', step: 'no_captions_confirmed', ok: true, detail: 'API response has no captionTracks — video has no captions' });
+    const result: TranscriptResult = { ok: false, error: 'no_captions', detail: 'innertube confirmed: no caption tracks' };
+    return { videoId, result, logs, timestamp: new Date().toISOString() };
   }
 
   // --- Fallback: HTML scraping ---
-  console.log(`[transcript] falling back to HTML scraping for ${videoId}`);
-  const htmlResult = await fetchCaptionTracksViaHtml(videoId);
+  log({ method: 'html_scraping', step: 'start_fallback', ok: true, detail: 'innertube failed or XML fetch failed, trying HTML scraping' });
+  const htmlResult = await fetchCaptionTracksViaHtml(videoId, log);
   if (htmlResult) {
+    log({
+      method: 'html_scraping',
+      step: 'caption_tracks_found',
+      ok: true,
+      detail: `Found ${htmlResult.length} track(s): ${htmlResult.map((t) => `${t.languageCode}${t.kind === 'asr' ? '(asr)' : ''}`).join(', ')}`,
+    });
+
     const url = pickBestCaptionUrl(htmlResult);
     if (!url) {
-      console.log(`[transcript] html: no suitable caption track for ${videoId}`);
-      return { ok: false, error: 'no_captions' };
+      log({ method: 'html_scraping', step: 'pick_caption', ok: false, detail: 'No suitable caption track in list' });
+      const result: TranscriptResult = { ok: false, error: 'no_captions', detail: 'html scraping found tracks but none suitable' };
+      return { videoId, result, logs, timestamp: new Date().toISOString() };
     }
-    const text = await fetchAndParseTranscript(url);
-    if (text) return { ok: true, text };
-    console.warn(`[transcript] html: caption URL found but XML fetch failed for ${videoId}`);
+
+    log({ method: 'html_scraping', step: 'pick_caption', ok: true, detail: `Selected URL: ${url.slice(0, 120)}...` });
+    const text = await fetchAndParseTranscript(url, 'html_scraping', log);
+    if (text) {
+      const result: TranscriptResult = { ok: true, text };
+      return { videoId, result, logs, timestamp: new Date().toISOString() };
+    }
   }
 
-  // 両方失敗
-  console.error(`[transcript] all methods failed for ${videoId}`);
-  return { ok: false, error: 'fetch_failed' };
+  // 両方失敗 — 最後のログから原因を推測
+  const lastBlockedLog = logs.find((l) => !l.ok && l.detail.includes('blocked'));
+  const lastParsingLog = logs.find((l) => !l.ok && l.step.includes('parse'));
+  let error: TranscriptError = 'fetch_failed';
+  let detail = 'All methods exhausted';
+  if (lastBlockedLog) {
+    error = 'blocked';
+    detail = lastBlockedLog.detail;
+  } else if (lastParsingLog) {
+    error = 'parsing_failed';
+    detail = lastParsingLog.detail;
+  }
+
+  console.error(`[transcript] all methods failed for ${videoId}: ${error} — ${detail}`);
+  const result: TranscriptResult = { ok: false, error, detail };
+  return { videoId, result, logs, timestamp: new Date().toISOString() };
+}
+
+/**
+ * 既存の簡易インターフェース（extract route 用）
+ */
+export async function fetchTranscript(videoId: string): Promise<TranscriptResult> {
+  const diagnostics = await fetchTranscriptWithDiagnostics(videoId);
+  return diagnostics.result;
 }
 
 // ─── 方法1: innertube API ──────────────────────────────
 
+interface InnertubeResult {
+  tracks: CaptionTrack[] | null;
+  noCaptions: boolean; // APIは成功したが字幕トラックが空
+}
+
 async function fetchCaptionTracksViaInnertube(
   videoId: string,
-): Promise<CaptionTrack[] | null> {
+  log: (entry: DiagnosticEntry) => void,
+): Promise<InnertubeResult> {
+  const fail = { tracks: null, noCaptions: false };
+
   try {
+    log({ method: 'innertube', step: 'fetch_start', ok: true, detail: `POST /youtubei/v1/player for ${videoId}` });
+
     const res = await fetch(
       'https://www.youtube.com/youtubei/v1/player?prettyPrint=false',
       {
@@ -94,23 +189,103 @@ async function fetchCaptionTracksViaInnertube(
       },
     );
 
+    const bodyText = await res.text();
+
     if (!res.ok) {
-      console.warn(`[transcript] innertube API returned ${res.status}`);
-      return null;
+      const isBlocked = res.status === 403 || res.status === 429;
+      log({
+        method: 'innertube',
+        step: 'fetch_response',
+        status: res.status,
+        ok: false,
+        detail: isBlocked
+          ? `blocked by YouTube (HTTP ${res.status})`
+          : `HTTP ${res.status} error`,
+        responseSnippet: bodyText.slice(0, 300),
+      });
+      return fail;
     }
 
-    const data = await res.json();
-    const tracks: CaptionTrack[] | undefined =
-      data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+    log({
+      method: 'innertube',
+      step: 'fetch_response',
+      status: res.status,
+      ok: true,
+      detail: `Response OK, body length: ${bodyText.length}`,
+    });
+
+    let data: Record<string, unknown>;
+    try {
+      data = JSON.parse(bodyText);
+    } catch {
+      log({
+        method: 'innertube',
+        step: 'parse_json',
+        ok: false,
+        detail: 'Failed to parse innertube response as JSON',
+        responseSnippet: bodyText.slice(0, 300),
+      });
+      return fail;
+    }
+
+    // playabilityStatus をチェック（動画がブロックされていないか）
+    const playability = data?.playabilityStatus as Record<string, unknown> | undefined;
+    if (playability) {
+      const playStatus = playability.status as string | undefined;
+      log({
+        method: 'innertube',
+        step: 'playability_check',
+        ok: playStatus === 'OK',
+        detail: `playabilityStatus.status = "${playStatus || 'undefined'}"${playability.reason ? ` — reason: ${playability.reason}` : ''}`,
+      });
+      if (playStatus !== 'OK') {
+        return fail;
+      }
+    }
+
+    // captions を探す
+    const captions = data?.captions as Record<string, unknown> | undefined;
+    if (!captions) {
+      log({
+        method: 'innertube',
+        step: 'find_captions',
+        ok: false,
+        detail: 'No "captions" key in response — video likely has no captions',
+      });
+      return { tracks: null, noCaptions: true };
+    }
+
+    const renderer = captions.playerCaptionsTracklistRenderer as Record<string, unknown> | undefined;
+    const tracks = renderer?.captionTracks as CaptionTrack[] | undefined;
 
     if (!tracks || tracks.length === 0) {
-      return null;
+      log({
+        method: 'innertube',
+        step: 'find_caption_tracks',
+        ok: false,
+        detail: 'captionTracks is empty or missing in renderer',
+      });
+      return { tracks: null, noCaptions: true };
     }
 
-    return tracks;
+    log({
+      method: 'innertube',
+      step: 'find_caption_tracks',
+      ok: true,
+      detail: `${tracks.length} caption track(s) found`,
+    });
+
+    return { tracks, noCaptions: false };
   } catch (e) {
-    console.warn('[transcript] innertube API error:', e);
-    return null;
+    const message = e instanceof Error ? e.message : String(e);
+    const isTimeout = message.includes('timeout') || message.includes('abort');
+    log({
+      method: 'innertube',
+      step: 'fetch_error',
+      ok: false,
+      detail: `${isTimeout ? 'Timeout/abort' : 'Network error'}: ${message}`,
+    });
+    return fail;
   }
 }
 
@@ -118,8 +293,11 @@ async function fetchCaptionTracksViaInnertube(
 
 async function fetchCaptionTracksViaHtml(
   videoId: string,
+  log: (entry: DiagnosticEntry) => void,
 ): Promise<CaptionTrack[] | null> {
   try {
+    log({ method: 'html_scraping', step: 'fetch_start', ok: true, detail: `GET /watch?v=${videoId}` });
+
     const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
       headers: {
         'User-Agent': USER_AGENT,
@@ -128,17 +306,87 @@ async function fetchCaptionTracksViaHtml(
       signal: AbortSignal.timeout(10000),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const bodySnippet = await res.text().then((t) => t.slice(0, 300)).catch(() => '(read failed)');
+      const isBlocked = res.status === 403 || res.status === 429;
+      log({
+        method: 'html_scraping',
+        step: 'fetch_response',
+        status: res.status,
+        ok: false,
+        detail: isBlocked
+          ? `blocked by YouTube (HTTP ${res.status})`
+          : `HTTP ${res.status} error`,
+        responseSnippet: bodySnippet,
+      });
+      return null;
+    }
+
     const html = await res.text();
-    return extractCaptionTracksFromHtml(html);
-  } catch {
+    log({
+      method: 'html_scraping',
+      step: 'fetch_response',
+      status: res.status,
+      ok: true,
+      detail: `Response OK, HTML length: ${html.length}`,
+    });
+
+    // consent ページ検出
+    if (html.includes('consent.youtube.com') || html.includes('CONSENT')) {
+      log({
+        method: 'html_scraping',
+        step: 'consent_check',
+        ok: false,
+        detail: 'YouTube returned a consent/cookie wall page instead of video page',
+        responseSnippet: html.slice(0, 300),
+      });
+      return null;
+    }
+
+    // ytInitialPlayerResponse 存在チェック
+    const hasPlayerResponse = html.includes('ytInitialPlayerResponse');
+    log({
+      method: 'html_scraping',
+      step: 'player_response_check',
+      ok: hasPlayerResponse,
+      detail: hasPlayerResponse
+        ? 'ytInitialPlayerResponse found in HTML'
+        : 'ytInitialPlayerResponse NOT found — page may be a shell/consent page',
+    });
+
+    const tracks = extractCaptionTracksFromHtml(html);
+    if (!tracks) {
+      log({
+        method: 'html_scraping',
+        step: 'extract_caption_tracks',
+        ok: false,
+        detail: '"captionTracks" not found or parsing failed',
+      });
+      return null;
+    }
+
+    log({
+      method: 'html_scraping',
+      step: 'extract_caption_tracks',
+      ok: true,
+      detail: `Extracted ${tracks.length} track(s)`,
+    });
+
+    return tracks;
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    log({
+      method: 'html_scraping',
+      step: 'fetch_error',
+      ok: false,
+      detail: `Error: ${message}`,
+    });
     return null;
   }
 }
 
 /**
  * HTML内の "captionTracks":[...] をブラケットカウントで正確に抽出する
- * 正規表現の .*? では入れ子の ] で途切れてしまう問題を回避
  */
 function extractCaptionTracksFromHtml(html: string): CaptionTrack[] | null {
   const marker = '"captionTracks":';
@@ -221,24 +469,59 @@ function pickBestCaptionUrl(tracks: CaptionTrack[]): string | null {
 
 // ─── 字幕XML取得 & パース ──────────────────────────────
 
-async function fetchAndParseTranscript(captionUrl: string): Promise<string | null> {
+async function fetchAndParseTranscript(
+  captionUrl: string,
+  method: 'innertube' | 'html_scraping',
+  log: (entry: DiagnosticEntry) => void,
+): Promise<string | null> {
   try {
+    log({ method, step: 'xml_fetch_start', ok: true, detail: `Fetching caption XML: ${captionUrl.slice(0, 120)}...` });
+
     const res = await fetch(captionUrl, {
       headers: { 'User-Agent': USER_AGENT },
       signal: AbortSignal.timeout(10000),
     });
-    if (!res.ok) return null;
+
+    if (!res.ok) {
+      const bodySnippet = await res.text().then((t) => t.slice(0, 300)).catch(() => '(read failed)');
+      log({
+        method,
+        step: 'xml_fetch_response',
+        status: res.status,
+        ok: false,
+        detail: `HTTP ${res.status}`,
+        responseSnippet: bodySnippet,
+      });
+      return null;
+    }
 
     const xml = await res.text();
-    return parseTranscriptXml(xml);
-  } catch {
+    log({
+      method,
+      step: 'xml_fetch_response',
+      status: res.status,
+      ok: true,
+      detail: `XML length: ${xml.length}`,
+      responseSnippet: xml.slice(0, 200),
+    });
+
+    const text = parseTranscriptXml(xml);
+    if (!text) {
+      log({ method, step: 'xml_parse', ok: false, detail: 'parseTranscriptXml returned null — no <text> elements found' });
+      return null;
+    }
+
+    log({ method, step: 'xml_parse', ok: true, detail: `Parsed transcript: ${text.length} chars` });
+    return text;
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    log({ method, step: 'xml_fetch_error', ok: false, detail: `Error: ${message}` });
     return null;
   }
 }
 
 /**
  * YouTube字幕XMLをプレーンテキストに変換する
- * <text start="0.0" dur="3.5">こんにちは</text> → "こんにちは"
  */
 function parseTranscriptXml(xml: string): string | null {
   const segments: string[] = [];

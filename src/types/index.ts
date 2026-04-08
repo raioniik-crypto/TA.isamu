@@ -124,7 +124,12 @@ export interface PersonalityExpression {
 }
 
 /** 字幕取得の失敗理由 */
-export type TranscriptError = 'no_captions' | 'fetch_failed';
+export type TranscriptError =
+  | 'no_captions'      // 動画に字幕が設定されていない
+  | 'fetch_failed'     // ネットワーク等の取得失敗
+  | 'blocked'          // YouTube側にブロック/拒否された
+  | 'parsing_failed'   // レスポンスのパースに失敗
+  | 'unknown';         // 不明な失敗
 
 /** ビューアで表示するコンテンツ */
 export interface ViewerContent {

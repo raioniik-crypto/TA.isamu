@@ -43,14 +43,23 @@ export function ViewerAnalysis() {
   if (!content) return null;
 
   // YouTube で字幕がない場合は解析不可の案内（理由に応じてメッセージを変える）
-  const isYouTubeWithoutTranscript =
-    content.type === 'youtube' && !content.body;
+  const isYouTube = content.type === 'youtube';
+  const isYouTubeWithoutTranscript = isYouTube && !content.body;
   const transcriptErrorMessage = isYouTubeWithoutTranscript
-    ? content.transcriptError === 'no_captions'
-      ? 'この動画には字幕が設定されていないため、動画内容の解析はできません。字幕が有効な動画でお試しください。'
-      : content.transcriptError === 'fetch_failed'
-        ? '字幕の取得に失敗しました。時間をおいて再度お試しください。'
-        : 'この動画は字幕を取得できないため、動画内容の解析はできません。字幕が有効な動画でお試しください。'
+    ? (() => {
+        switch (content.transcriptError) {
+          case 'no_captions':
+            return 'この動画には字幕が設定されていないため、動画内容の解析はできません。字幕（自動生成含む）が有効な動画でお試しください。';
+          case 'blocked':
+            return 'YouTubeから字幕の取得が拒否されました。サーバーのリージョンやアクセス制限の可能性があります。時間をおいて再度お試しください。';
+          case 'parsing_failed':
+            return '字幕データの解析に失敗しました。YouTubeの仕様変更の可能性があります。';
+          case 'fetch_failed':
+            return '字幕の取得に失敗しました。ネットワークの問題か、YouTube側の一時的なエラーの可能性があります。時間をおいて再度お試しください。';
+          default:
+            return '字幕を取得できませんでした。時間をおいて再度お試しください。';
+        }
+      })()
     : null;
 
   const handleAnalyze = async () => {
@@ -109,15 +118,35 @@ export function ViewerAnalysis() {
         style={{ boxShadow: 'var(--shadow-sm)' }}
       >
         {isYouTubeWithoutTranscript ? (
-          <p className="text-[13px] text-muted leading-relaxed">
-            {transcriptErrorMessage}
-          </p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] font-medium text-muted">YouTube字幕解析</span>
+              <span className="inline-block rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                BETA
+              </span>
+            </div>
+            <p className="text-[13px] text-muted leading-relaxed">
+              {transcriptErrorMessage}
+            </p>
+            {content.transcriptError && (
+              <p className="text-[11px] text-muted/60">
+                エラー種別: {content.transcriptError}
+              </p>
+            )}
+          </div>
         ) : (
           <>
             <p className="mb-3 text-[13px] font-medium text-muted">
-              {content.type === 'youtube'
-                ? 'AIにこの動画の字幕を解析してもらう'
-                : 'AIにこのページを解析してもらう'}
+              {isYouTube ? (
+                <>
+                  AIにこの動画の字幕を解析してもらう
+                  <span className="ml-1.5 inline-block rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    BETA
+                  </span>
+                </>
+              ) : (
+                'AIにこのページを解析してもらう'
+              )}
             </p>
 
             <div className="flex flex-wrap items-center gap-2">
