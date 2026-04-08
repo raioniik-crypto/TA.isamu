@@ -4,13 +4,21 @@ import { motion } from 'framer-motion';
 import { ReadPageButton } from '@/components/page-reader/ReadPageButton';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
+import { useHydration } from '@/stores/use-hydration';
 import { derivePersonality } from '@/lib/ai/personality';
+import { DEFAULT_GROWTH_PARAMS } from '@/types';
 
 export default function HomePage() {
+  const hydrated = useHydration();
   const aiName = useSettingsStore((s) => s.aiName);
   const params = useAIProfileStore((s) => s.params);
   const totalInteractions = useAIProfileStore((s) => s.totalInteractions);
-  const personality = derivePersonality(params);
+
+  // hydration前はデフォルト値で表示（SSR一致）
+  const displayParams = hydrated ? params : DEFAULT_GROWTH_PARAMS;
+  const displayName = hydrated ? aiName : 'イサム';
+  const displayCount = hydrated ? totalInteractions : 0;
+  const personality = derivePersonality(displayParams);
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -24,7 +32,7 @@ export default function HomePage() {
           TA.isamu
         </h1>
         <p className="text-muted">
-          {aiName}と一緒にWebを探検しよう
+          {displayName}と一緒にWebを探検しよう
         </p>
 
         {/* AIステータスカード */}
@@ -40,12 +48,12 @@ export default function HomePage() {
                 🌱
               </div>
               <div>
-                <h2 className="font-semibold text-foreground">{aiName}</h2>
+                <h2 className="font-semibold text-foreground">{displayName}</h2>
                 <p className="text-xs text-muted">{personality.trait}</p>
               </div>
             </div>
             <span className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
-              {totalInteractions}回会話
+              {displayCount}回会話
             </span>
           </div>
           <p className="text-sm text-muted leading-relaxed">
@@ -75,14 +83,14 @@ export default function HomePage() {
         </h3>
         <ul className="space-y-1.5 text-xs text-muted">
           <li>
-            右下の <span className="text-primary font-medium">{aiName}</span> をタップして会話を始めよう
+            右下の <span className="text-primary font-medium">{displayName}</span> をタップして会話を始めよう
           </li>
           <li>URLを入力して「このページを見て」で記事を読んでもらえます</li>
           <li>
-            会話するほど{aiName}の性格が少しずつ変わっていきます
+            会話するほど{displayName}の性格が少しずつ変わっていきます
           </li>
           <li>
-            「日記」ページで{aiName}の学習記録を見返せます
+            「日記」ページで{displayName}の学習記録を見返せます
           </li>
         </ul>
       </motion.section>

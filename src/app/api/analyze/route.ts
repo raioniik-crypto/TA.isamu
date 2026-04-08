@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { callLLM } from '@/lib/ai/llm-client';
 import { buildSystemPrompt } from '@/lib/ai/personality';
 import { buildAnalysisPrompt } from '@/lib/ai/prompts';
-import { extractPageContent } from '@/lib/page-reader/extractor';
+import { extractPageContent, PageReadError } from '@/lib/page-reader/extractor';
 import { pageReadDelta } from '@/lib/growth/engine';
 import type { AnalysisType, GrowthParams } from '@/types';
 
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     } = body;
 
     if (!url) {
-      return NextResponse.json({ error: 'url is required' }, { status: 400 });
+      return NextResponse.json({ error: 'URLを入力してください。' }, { status: 400 });
     }
 
     // ページ内容を取得
@@ -47,8 +47,15 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Analyze API error:', error);
-    const message =
-      error instanceof Error ? error.message : 'Failed to analyze page';
-    return NextResponse.json({ error: message }, { status: 500 });
+
+    // PageReadError はユーザー向けメッセージをそのまま返す
+    if (error instanceof PageReadError) {
+      return NextResponse.json({ error: error.userMessage }, { status: 422 });
+    }
+
+    return NextResponse.json(
+      { error: 'ページの解析中にエラーが発生しました。もう一度試してみてください。' },
+      { status: 500 },
+    );
   }
 }

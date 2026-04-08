@@ -7,6 +7,7 @@ import { ChatBubble } from './ChatBubble';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useChatStore } from '@/stores/chat-store';
+import { useHydration } from '@/stores/use-hydration';
 
 const GREETINGS = [
   'やあ！今日はなにを調べようか？',
@@ -23,11 +24,15 @@ export function AICharacter() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [greeting, setGreeting] = useState<string | null>(null);
+  const hydrated = useHydration();
   const aiName = useSettingsStore((s) => s.aiName);
   const isSending = useChatStore((s) => s.isSending);
 
-  // 初回表示時にあいさつ吹き出し
+  const displayName = hydrated ? aiName : 'イサム';
+
+  // hydration完了後にあいさつ吹き出し
   useEffect(() => {
+    if (!hydrated) return;
     const timer = setTimeout(() => {
       const msg = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
       setGreeting(msg);
@@ -37,7 +42,7 @@ export function AICharacter() {
       clearTimeout(timer);
       clearTimeout(hideTimer);
     };
-  }, []);
+  }, [hydrated]);
 
   if (isMinimized) {
     return (
@@ -46,7 +51,7 @@ export function AICharacter() {
         onClick={() => setIsMinimized(false)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        aria-label={`${aiName}を表示`}
+        aria-label={`${displayName}を表示`}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
       >

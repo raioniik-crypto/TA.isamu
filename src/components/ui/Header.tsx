@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
+import { useHydration } from '@/stores/use-hydration';
 
 const NAV_ITEMS = [
   { href: '/', label: 'ホーム' },
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
 
 export function Header() {
   const pathname = usePathname();
+  const hydrated = useHydration();
   const aiName = useSettingsStore((s) => s.aiName);
   const totalInteractions = useAIProfileStore((s) => s.totalInteractions);
 
@@ -23,9 +25,11 @@ export function Header() {
         <Link href="/" className="flex items-center gap-2 font-bold text-primary">
           <span className="text-xl">🌱</span>
           <span className="hidden sm:inline">TA.isamu</span>
-          <span className="text-xs text-muted font-normal ml-1">
-            with {aiName}
-          </span>
+          {hydrated && (
+            <span className="text-xs text-muted font-normal ml-1">
+              with {aiName}
+            </span>
+          )}
         </Link>
 
         <nav className="flex items-center gap-1">
@@ -42,7 +46,7 @@ export function Header() {
               {item.label}
             </Link>
           ))}
-          {totalInteractions > 0 && (
+          {hydrated && totalInteractions > 0 && (
             <span className="ml-2 rounded-full bg-primary-light/20 px-2 py-0.5 text-xs text-primary">
               {totalInteractions}回
             </span>
