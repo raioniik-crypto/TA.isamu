@@ -39,8 +39,8 @@ export function ViewerAnalysis() {
   const applyGrowth = useAIProfileStore((s) => s.applyGrowth);
   const incrementInteractions = useAIProfileStore((s) => s.incrementInteractions);
 
-  // 記事コンテンツがある場合のみ表示
-  if (!content || content.type !== 'article') return null;
+  // コンテンツがある場合のみ表示
+  if (!content) return null;
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
