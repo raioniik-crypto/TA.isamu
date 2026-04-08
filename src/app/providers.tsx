@@ -1,21 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
 import { Header } from '@/components/ui/Header';
-import { AICharacter } from '@/components/ai-character/AICharacter';
+
+// AICharacter relies on browser APIs during render (window.innerWidth, drag,
+// useMotionValue, viewport sizing). next/dynamic ssr:false ensures the module
+// is never loaded or rendered on the server, eliminating hydration mismatches.
+const AICharacter = dynamic(
+  () =>
+    import('@/components/ai-character/AICharacter').then(
+      (mod) => mod.AICharacter,
+    ),
+  { ssr: false },
+);
 
 export function ClientProviders({ children }: { children: React.ReactNode }) {
-  // AICharacter uses window-dependent values during render (drag, motion values,
-  // viewport sizing). Deferring to after mount avoids SSR/client hydration mismatch.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
   return (
     <ThemeProvider>
       <Header />
       <main className="flex-1">{children}</main>
-      {mounted && <AICharacter />}
+      <AICharacter />
     </ThemeProvider>
   );
 }
