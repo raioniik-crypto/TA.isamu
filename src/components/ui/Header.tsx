@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useHydration } from '@/stores/use-hydration';
+import { BrowserBar } from '@/components/browser/BrowserBar';
 
 const NAV_ITEMS = [
   { href: '/', label: 'ホーム' },
@@ -19,12 +20,15 @@ export function Header() {
   const aiName = useSettingsStore((s) => s.aiName);
   const totalInteractions = useAIProfileStore((s) => s.totalInteractions);
 
+  const isHome = pathname === '/';
+
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/85 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
+      {/* 上段: ロゴ + ナビ */}
+      <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-bold text-primary">
-          <span className="text-xl">🌱</span>
-          <span className="hidden sm:inline text-base tracking-tight">Aimo</span>
+          <span className="text-lg">🌱</span>
+          <span className="hidden sm:inline text-[15px] tracking-tight">Aimo</span>
           {hydrated && (
             <span className="text-xs text-muted font-normal ml-0.5 hidden sm:inline">
               with {aiName}
@@ -37,7 +41,7 @@ export function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors ${
                 pathname === item.href
                   ? 'bg-primary text-white shadow-sm'
                   : 'text-muted hover:bg-surface-hover hover:text-foreground'
@@ -47,12 +51,19 @@ export function Header() {
             </Link>
           ))}
           {hydrated && totalInteractions > 0 && (
-            <span className="ml-2 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-              {totalInteractions}回
+            <span className="ml-1.5 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+              {totalInteractions}
             </span>
           )}
         </nav>
       </div>
+
+      {/* 下段: ブラウザバー（ホームのみ表示） */}
+      {isHome && (
+        <div className="mx-auto max-w-5xl px-4 pb-2">
+          <BrowserBar />
+        </div>
+      )}
     </header>
   );
 }

@@ -1,11 +1,12 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { UrlBar } from '@/components/viewer/UrlBar';
 import { ContentViewer } from '@/components/viewer/ContentViewer';
 import { VideoQA } from '@/components/viewer/VideoQA';
 import { ViewerAnalysis } from '@/components/viewer/ViewerAnalysis';
+import { BrowserHome } from '@/components/browser/BrowserHome';
+import { useViewerStore } from '@/stores/viewer-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useHydration } from '@/stores/use-hydration';
@@ -14,6 +15,8 @@ import { DEFAULT_GROWTH_PARAMS } from '@/types';
 
 export default function HomePage() {
   const hydrated = useHydration();
+  const content = useViewerStore((s) => s.content);
+  const error = useViewerStore((s) => s.error);
   const aiName = useSettingsStore((s) => s.aiName);
   const params = useAIProfileStore((s) => s.params);
   const totalInteractions = useAIProfileStore((s) => s.totalInteractions);
@@ -23,97 +26,57 @@ export default function HomePage() {
   const displayCount = hydrated ? totalInteractions : 0;
   const personality = derivePersonality(displayParams);
 
+  const hasContent = !!content;
+
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12 pb-24">
-      {/* ウェルカムセクション */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-10 text-center"
-      >
-        <h1 className="mb-1.5 text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-          Aimo
-        </h1>
-        <p className="text-[15px] text-muted">
-          {displayName}と一緒にWebを探検しよう
-        </p>
-
-        {/* AIステータスカード */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="mt-8 rounded-2xl border border-border bg-surface p-5 sm:p-6 text-left"
-          style={{ boxShadow: 'var(--shadow-sm)' }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-hover overflow-hidden">
-                <Image
-                  src="/characters/phil-default.png"
-                  alt={displayName}
-                  width={44}
-                  height={44}
-                  className="object-contain"
-                />
-              </div>
-              <div>
-                <h2 className="font-semibold text-foreground text-base">{displayName}</h2>
-                <p className="text-[13px] text-primary font-medium">{personality.trait}</p>
-              </div>
+    <div className="mx-auto max-w-5xl px-4 pb-24">
+      {/* エラー表示 */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="mt-3 rounded-xl border border-error/20 bg-error/5 px-4 py-3"
+          >
+            <div className="flex items-start gap-2.5">
+              <span className="mt-0.5 text-sm shrink-0">😥</span>
+              <p className="text-[13px] text-foreground leading-relaxed">{error}</p>
             </div>
-            <span className="rounded-full bg-primary/8 px-3 py-1 text-[13px] font-semibold text-primary">
-              {displayCount}回会話
-            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* コンテンツ非表示時 → ブラウザホーム画面 */}
+      {!hasContent && (
+        <BrowserHome
+          displayName={displayName}
+          displayCount={displayCount}
+          personality={personality}
+        />
+      )}
+
+      {/* コンテンツ表示時 → ブラウザ閲覧モード */}
+      {hasContent && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-4 space-y-4"
+        >
+          {/* メイン閲覧エリア */}
+          <ContentViewer />
+
+          {/* AI解析パネル（横並び可能に） */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <VideoQA />
+            </div>
+            <div className="space-y-4">
+              <ViewerAnalysis />
+            </div>
           </div>
-          <p className="text-sm text-muted leading-relaxed">
-            {personality.description}
-          </p>
         </motion.div>
-      </motion.section>
-
-      {/* ビューアセクション */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="space-y-4"
-      >
-        <UrlBar />
-        <ContentViewer />
-        <VideoQA />
-        <ViewerAnalysis />
-      </motion.section>
-
-      {/* ヒント */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="mt-10 rounded-2xl border border-border bg-surface/60 p-5"
-      >
-        <h3 className="mb-3 text-sm font-semibold text-foreground">
-          使い方ヒント
-        </h3>
-        <ul className="space-y-2.5 text-sm text-muted">
-          <li className="flex items-start gap-2.5">
-            <span className="mt-0.5 text-primary shrink-0">1.</span>
-            右下の <span className="text-primary font-medium">{displayName}</span> をタップして会話を始めよう
-          </li>
-          <li className="flex items-start gap-2.5">
-            <span className="mt-0.5 text-primary shrink-0">2.</span>
-            URLを入力して記事やYouTube動画をこのサイト内で開けます
-          </li>
-          <li className="flex items-start gap-2.5">
-            <span className="mt-0.5 text-primary shrink-0">3.</span>
-            会話するほど{displayName}の性格が少しずつ変わっていきます
-          </li>
-          <li className="flex items-start gap-2.5">
-            <span className="mt-0.5 text-primary shrink-0">4.</span>
-            「日記」ページで{displayName}の学習記録を見返せます
-          </li>
-        </ul>
-      </motion.section>
+      )}
     </div>
   );
 }

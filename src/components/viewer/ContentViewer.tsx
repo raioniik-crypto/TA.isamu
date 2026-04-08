@@ -11,18 +11,18 @@ export function ContentViewer() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-border bg-surface overflow-hidden"
+      className="rounded-xl border border-border bg-surface overflow-hidden"
       style={{ boxShadow: 'var(--shadow-md)' }}
     >
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between border-b border-border px-5 py-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span className="text-base shrink-0">
+      {/* ページタイトルバー */}
+      <div className="flex items-center justify-between border-b border-border px-4 py-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm shrink-0">
             {content.type === 'youtube' ? '🎬' : '📄'}
           </span>
-          <h3 className="text-sm font-semibold text-foreground truncate">
+          <h3 className="text-[13px] font-medium text-foreground truncate">
             {content.title}
           </h3>
         </div>
@@ -51,10 +51,10 @@ function CloseButton() {
   return (
     <button
       onClick={handleClose}
-      className="rounded-lg p-1.5 text-muted hover:bg-surface-hover hover:text-foreground transition-colors shrink-0"
+      className="rounded-md p-1 text-muted hover:bg-surface-hover hover:text-foreground transition-colors shrink-0"
       aria-label="閉じる"
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
         <path d="M18 6L6 18M6 6l12 12" />
       </svg>
     </button>
@@ -77,9 +77,9 @@ function YouTubeEmbed({ videoId }: { videoId: string }) {
 
 function ArticleReader({ body, url }: { body: string; url: string }) {
   return (
-    <div className="max-h-[400px] overflow-y-auto">
+    <div className="max-h-[60vh] overflow-y-auto">
       <div className="px-5 py-4">
-        <p className="mb-3 text-[13px] text-muted truncate">{url}</p>
+        <p className="mb-3 text-[12px] text-muted truncate">{url}</p>
         <div className="text-[15px] leading-[1.8] text-foreground whitespace-pre-wrap">
           {body}
         </div>
