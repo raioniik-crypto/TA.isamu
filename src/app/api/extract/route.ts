@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractPage, PageReadError } from '@/lib/page-reader/extractor';
+import { fetchTranscript } from '@/lib/youtube/transcript';
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,11 +13,15 @@ export async function POST(req: NextRequest) {
     // YouTube判定
     const ytId = extractYouTubeId(url);
     if (ytId) {
+      // 字幕の取得を試みる
+      const transcript = await fetchTranscript(ytId);
+
       return NextResponse.json({
         url,
         title: 'YouTube動画',
         type: 'youtube' as const,
         youtubeId: ytId,
+        body: transcript ?? undefined,
       });
     }
 

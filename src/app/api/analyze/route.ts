@@ -14,19 +14,22 @@ export async function POST(req: NextRequest) {
       type,
       aiName,
       growthParams,
+      content: preSuppliedContent,
     }: {
       url: string;
       type: AnalysisType;
       aiName: string;
       growthParams: GrowthParams;
+      content?: string;
     } = body;
 
     if (!url) {
       return NextResponse.json({ error: 'URLを入力してください。' }, { status: 400 });
     }
 
-    // ページ内容を取得
-    const content = await extractPageContent(url);
+    // クライアントから本文が渡されていればそのまま使う（YouTube字幕など）
+    // なければ従来通りURLからページ内容を取得
+    const content = preSuppliedContent || (await extractPageContent(url));
 
     // 解析プロンプトを構築
     const systemPrompt = buildSystemPrompt(aiName || 'アイモ', growthParams);

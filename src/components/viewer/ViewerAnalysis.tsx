@@ -42,6 +42,10 @@ export function ViewerAnalysis() {
   // コンテンツがある場合のみ表示
   if (!content) return null;
 
+  // YouTube で字幕がない場合は解析不可の案内
+  const isYouTubeWithoutTranscript =
+    content.type === 'youtube' && !content.body;
+
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     setError(null);
@@ -56,6 +60,8 @@ export function ViewerAnalysis() {
           type: selectedType,
           aiName,
           growthParams: params,
+          // ビューアが持っている本文をそのまま渡す（re-fetch不要に）
+          content: content.body || undefined,
         }),
       });
 
@@ -95,45 +101,56 @@ export function ViewerAnalysis() {
         className="rounded-2xl border border-border bg-surface p-4"
         style={{ boxShadow: 'var(--shadow-sm)' }}
       >
-        <p className="mb-3 text-[13px] font-medium text-muted">
-          AIにこのページを解析してもらう
-        </p>
+        {isYouTubeWithoutTranscript ? (
+          <p className="text-[13px] text-muted leading-relaxed">
+            この動画は字幕を取得できないため、動画内容そのものの解析はできません。
+            字幕が有効な動画でお試しください。
+          </p>
+        ) : (
+          <>
+            <p className="mb-3 text-[13px] font-medium text-muted">
+              {content.type === 'youtube'
+                ? 'AIにこの動画の字幕を解析してもらう'
+                : 'AIにこのページを解析してもらう'}
+            </p>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {ANALYSIS_TYPES.map((type) => (
-            <button
-              key={type}
-              onClick={() => setSelectedType(type)}
-              className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all ${
-                selectedType === type
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'bg-background text-muted hover:bg-surface-hover hover:text-foreground border border-border'
-              }`}
-            >
-              <span className="mr-1">{TYPE_ICONS[type]}</span>
-              {ANALYSIS_TYPE_LABELS[type]}
-            </button>
-          ))}
+            <div className="flex flex-wrap items-center gap-2">
+              {ANALYSIS_TYPES.map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setSelectedType(type)}
+                  className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all ${
+                    selectedType === type
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-background text-muted hover:bg-surface-hover hover:text-foreground border border-border'
+                  }`}
+                >
+                  <span className="mr-1">{TYPE_ICONS[type]}</span>
+                  {ANALYSIS_TYPE_LABELS[type]}
+                </button>
+              ))}
 
-          <button
-            onClick={handleAnalyze}
-            disabled={isAnalyzing}
-            className="ml-auto rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white transition-all hover:bg-primary-dark active:scale-[0.97] disabled:opacity-40"
-          >
-            {isAnalyzing ? (
-              <span className="flex items-center gap-1.5">
-                <motion.span
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  className="inline-block h-3 w-3 rounded-full border-2 border-white/30 border-t-white"
-                />
-                解析中...
-              </span>
-            ) : (
-              '解析する'
-            )}
-          </button>
-        </div>
+              <button
+                onClick={handleAnalyze}
+                disabled={isAnalyzing}
+                className="ml-auto rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white transition-all hover:bg-primary-dark active:scale-[0.97] disabled:opacity-40"
+              >
+                {isAnalyzing ? (
+                  <span className="flex items-center gap-1.5">
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                      className="inline-block h-3 w-3 rounded-full border-2 border-white/30 border-t-white"
+                    />
+                    解析中...
+                  </span>
+                ) : (
+                  '解析する'
+                )}
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* エラー */}
