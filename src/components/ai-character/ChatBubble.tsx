@@ -15,14 +15,16 @@ export function ChatBubble({ message, visible }: ChatBubbleProps) {
     <AnimatePresence>
       {visible && message && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 10 }}
+          initial={{ opacity: 0, scale: 0.85, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8, y: 10 }}
-          className="absolute bottom-full right-0 mb-2 w-64 rounded-2xl rounded-br-sm bg-surface p-3 text-sm shadow-lg border border-border"
+          exit={{ opacity: 0, scale: 0.85, y: 8 }}
+          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+          className="absolute bottom-full right-0 mb-3 w-64 rounded-2xl rounded-br-md bg-surface p-4 text-[13px] border border-border"
+          style={{ boxShadow: 'var(--shadow-md)' }}
         >
           <p className="text-foreground leading-relaxed">{message}</p>
           {/* 吹き出しの尻尾 */}
-          <div className="absolute -bottom-1.5 right-4 h-3 w-3 rotate-45 bg-surface border-r border-b border-border" />
+          <div className="absolute -bottom-[6px] right-5 h-3 w-3 rotate-45 bg-surface border-r border-b border-border" />
         </motion.div>
       )}
     </AnimatePresence>

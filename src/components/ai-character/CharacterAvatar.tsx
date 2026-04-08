@@ -13,7 +13,7 @@ interface CharacterAvatarProps {
  * 柔らかく親しみやすいデザイン
  */
 export function CharacterAvatar({
-  size = 56,
+  size = 60,
   isThinking = false,
   onClick,
 }: CharacterAvatarProps) {
@@ -21,13 +21,14 @@ export function CharacterAvatar({
     <motion.button
       onClick={onClick}
       className="relative rounded-full focus:outline-none"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      style={{ filter: 'drop-shadow(0 4px 12px rgba(99,102,241,0.25))' }}
+      whileHover={{ scale: 1.08 }}
+      whileTap={{ scale: 0.92 }}
       animate={isThinking ? { rotate: [0, -3, 3, 0] } : {}}
       transition={
         isThinking
           ? { repeat: Infinity, duration: 1.5, ease: 'easeInOut' }
-          : {}
+          : { type: 'spring', stiffness: 400, damping: 20 }
       }
       aria-label="AIキャラクター"
     >
@@ -40,9 +41,10 @@ export function CharacterAvatar({
       >
         {/* 背景円 */}
         <circle cx="50" cy="50" r="48" fill="url(#avatarGradient)" />
+        <circle cx="50" cy="50" r="46" fill="url(#avatarGradient)" opacity="0.8" />
 
         {/* 顔 */}
-        <circle cx="50" cy="52" r="30" fill="white" opacity="0.9" />
+        <circle cx="50" cy="52" r="30" fill="white" opacity="0.95" />
 
         {/* 左目 */}
         <ellipse cx="40" cy="47" rx="4" ry="5" fill="#4338ca">
@@ -54,6 +56,8 @@ export function CharacterAvatar({
             begin="2s"
           />
         </ellipse>
+        {/* 左目のハイライト */}
+        <circle cx="41.5" cy="45.5" r="1.5" fill="white" opacity="0.8" />
 
         {/* 右目 */}
         <ellipse cx="60" cy="47" rx="4" ry="5" fill="#4338ca">
@@ -65,10 +69,12 @@ export function CharacterAvatar({
             begin="2s"
           />
         </ellipse>
+        {/* 右目のハイライト */}
+        <circle cx="61.5" cy="45.5" r="1.5" fill="white" opacity="0.8" />
 
         {/* 口 */}
         <path
-          d="M42 58 Q50 65 58 58"
+          d="M42 58 Q50 66 58 58"
           stroke="#4338ca"
           strokeWidth="2.5"
           strokeLinecap="round"
@@ -76,21 +82,21 @@ export function CharacterAvatar({
         />
 
         {/* ほっぺ */}
-        <circle cx="33" cy="55" r="4" fill="#fca5a5" opacity="0.5" />
-        <circle cx="67" cy="55" r="4" fill="#fca5a5" opacity="0.5" />
+        <circle cx="32" cy="56" r="5" fill="#fca5a5" opacity="0.35" />
+        <circle cx="68" cy="56" r="5" fill="#fca5a5" opacity="0.35" />
 
         {/* アンテナ */}
         <path
-          d="M50 22 L50 12"
+          d="M50 22 L50 11"
           stroke="#6366f1"
-          strokeWidth="2"
+          strokeWidth="2.5"
           strokeLinecap="round"
         />
-        <circle cx="50" cy="10" r="3" fill="#fbbf24">
+        <circle cx="50" cy="9" r="4" fill="#fbbf24">
           {isThinking && (
             <animate
               attributeName="r"
-              values="3;5;3"
+              values="4;6;4"
               dur="0.8s"
               repeatCount="indefinite"
             />
@@ -106,6 +112,7 @@ export function CharacterAvatar({
             y2="90"
           >
             <stop offset="0%" stopColor="#818cf8" />
+            <stop offset="50%" stopColor="#a78bfa" />
             <stop offset="100%" stopColor="#c084fc" />
           </linearGradient>
         </defs>
@@ -114,7 +121,7 @@ export function CharacterAvatar({
       {/* 考え中インジケーター */}
       {isThinking && (
         <motion.div
-          className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-accent"
+          className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-accent border-2 border-surface"
           animate={{ scale: [1, 1.3, 1] }}
           transition={{ repeat: Infinity, duration: 0.8 }}
         />

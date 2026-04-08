@@ -95,29 +95,40 @@ export function ChatPanel({ onClose, onMinimize }: ChatPanelProps) {
   );
 
   return (
-    <div className="flex h-[480px] flex-col rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden">
+    <div
+      className="flex flex-col rounded-2xl border border-border bg-surface overflow-hidden"
+      style={{ height: 'min(520px, calc(100dvh - 120px))', boxShadow: 'var(--shadow-chat)' }}
+    >
       {/* ヘッダー */}
-      <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
-        <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-success" />
-          <h3 className="text-sm font-semibold text-foreground">{aiName}</h3>
+      <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <div className="relative">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary-light to-primary flex items-center justify-center text-white text-xs font-bold">
+              {aiName.charAt(0)}
+            </div>
+            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-success border-2 border-surface" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground leading-tight">{aiName}</h3>
+            <p className="text-[10px] text-muted leading-tight">オンライン</p>
+          </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <button
             onClick={onMinimize}
-            className="rounded-lg p-1.5 text-muted hover:bg-surface-hover hover:text-foreground transition-colors"
+            className="rounded-lg p-2 text-muted hover:bg-surface-hover hover:text-foreground transition-colors"
             aria-label="最小化"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M5 12h14" />
             </svg>
           </button>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-muted hover:bg-surface-hover hover:text-foreground transition-colors"
+            className="rounded-lg p-2 text-muted hover:bg-surface-hover hover:text-foreground transition-colors"
             aria-label="閉じる"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>

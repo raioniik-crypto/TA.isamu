@@ -15,6 +15,13 @@ const ANALYSIS_TYPES: AnalysisType[] = [
   'perspective',
 ];
 
+const TYPE_ICONS: Record<AnalysisType, string> = {
+  summary: '📋',
+  simplify: '💡',
+  caution: '⚠️',
+  perspective: '🔍',
+};
+
 const LOADING_MESSAGES = [
   'ページを読み込んでいます...',
   'テキストを抽出しています...',
@@ -46,7 +53,6 @@ export function ReadPageButton() {
     setError(null);
     setResult(null);
 
-    // ローディングステップの進行
     const stepInterval = setInterval(() => {
       setLoadingStep((s) => Math.min(s + 1, LOADING_MESSAGES.length - 1));
     }, 2000);
@@ -96,12 +102,12 @@ export function ReadPageButton() {
   return (
     <div className="space-y-4">
       {/* URL入力 */}
-      <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
-        <h3 className="mb-3 text-sm font-semibold text-foreground">
+      <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
+        <h3 className="mb-4 text-base font-semibold text-foreground">
           ページを読んでもらう
         </h3>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           <input
             type="url"
             value={url}
@@ -110,7 +116,7 @@ export function ReadPageButton() {
               if (e.key === 'Enter' && url.trim() && !isLoading) handleAnalyze();
             }}
             placeholder="https://example.com/article"
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
+            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all"
           />
 
           {/* 解析タイプ選択 */}
@@ -119,12 +125,13 @@ export function ReadPageButton() {
               <button
                 key={type}
                 onClick={() => setSelectedType(type)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`rounded-lg px-3.5 py-2 text-xs font-medium transition-all ${
                   selectedType === type
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary text-white shadow-sm'
                     : 'bg-background text-muted hover:bg-surface-hover hover:text-foreground border border-border'
                 }`}
               >
+                <span className="mr-1">{TYPE_ICONS[type]}</span>
                 {ANALYSIS_TYPE_LABELS[type]}
               </button>
             ))}
@@ -133,10 +140,10 @@ export function ReadPageButton() {
           <button
             onClick={handleAnalyze}
             disabled={!url.trim() || isLoading}
-            className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-40"
+            className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark hover:shadow-md active:scale-[0.98] disabled:opacity-40 disabled:shadow-none"
           >
             {isLoading ? (
-              <span className="flex items-center justify-center gap-2">
+              <span className="flex items-center justify-center gap-2.5">
                 <motion.span
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}

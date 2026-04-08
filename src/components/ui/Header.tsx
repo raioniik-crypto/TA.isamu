@@ -20,26 +20,26 @@ export function Header() {
   const totalInteractions = useAIProfileStore((s) => s.totalInteractions);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-surface/80 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 border-b border-border bg-surface/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-bold text-primary">
           <span className="text-xl">🌱</span>
-          <span className="hidden sm:inline">TA.isamu</span>
+          <span className="hidden sm:inline text-base tracking-tight">TA.isamu</span>
           {hydrated && (
-            <span className="text-xs text-muted font-normal ml-1">
+            <span className="text-[11px] text-muted font-normal ml-0.5 hidden sm:inline">
               with {aiName}
             </span>
           )}
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-0.5">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+              className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
                 pathname === item.href
-                  ? 'bg-primary text-white'
+                  ? 'bg-primary text-white shadow-sm'
                   : 'text-muted hover:bg-surface-hover hover:text-foreground'
               }`}
             >
@@ -47,7 +47,7 @@ export function Header() {
             </Link>
           ))}
           {hydrated && totalInteractions > 0 && (
-            <span className="ml-2 rounded-full bg-primary-light/20 px-2 py-0.5 text-xs text-primary">
+            <span className="ml-2 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
               {totalInteractions}回
             </span>
           )}

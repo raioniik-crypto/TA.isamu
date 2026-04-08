@@ -47,7 +47,8 @@ export function AICharacter() {
   if (isMinimized) {
     return (
       <motion.button
-        className="fixed bottom-4 right-4 z-50 rounded-full bg-primary p-2 text-white shadow-lg"
+        className="fixed bottom-5 right-5 z-50 rounded-full bg-primary p-3 text-white"
+        style={{ boxShadow: 'var(--shadow-lg)' }}
         onClick={() => setIsMinimized(false)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -55,7 +56,7 @@ export function AICharacter() {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
       </motion.button>
@@ -63,7 +64,7 @@ export function AICharacter() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-5 right-5 z-50">
       {/* チャットパネル */}
       <AnimatePresence>
         {isOpen && (
@@ -72,7 +73,7 @@ export function AICharacter() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="absolute bottom-20 right-0 w-[360px] sm:w-[400px]"
+            className="absolute bottom-[72px] right-0 w-[calc(100vw-2.5rem)] max-w-[400px]"
           >
             <ChatPanel
               onClose={() => setIsOpen(false)}
@@ -91,6 +92,7 @@ export function AICharacter() {
       {/* アバター */}
       <div className="flex items-end gap-2">
         <CharacterAvatar
+          size={60}
           isThinking={isSending}
           onClick={() => {
             setIsOpen(!isOpen);
