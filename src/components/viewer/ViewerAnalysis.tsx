@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { AnalysisType, GrowthDelta } from '@/types';
 import { ANALYSIS_TYPE_LABELS } from '@/types';
 import { useViewerStore } from '@/stores/viewer-store';
+import { useWatchingStore } from '@/stores/watching-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { AnalysisResult } from '@/components/page-reader/AnalysisResult';
@@ -60,6 +61,10 @@ export function ViewerAnalysis() {
   // 手動テキスト貼り付け用
   const [manualText, setManualText] = useState('');
 
+  const startSession = useWatchingStore((s) => s.startSession);
+  const updateTranscript = useWatchingStore((s) => s.updateTranscript);
+  const watchingSession = useWatchingStore((s) => s.session);
+
   const aiName = useSettingsStore((s) => s.aiName);
   const params = useAIProfileStore((s) => s.params);
   const applyGrowth = useAIProfileStore((s) => s.applyGrowth);
@@ -77,6 +82,17 @@ export function ViewerAnalysis() {
 
   const handleAnalyze = async () => {
     if (!canAnalyze) return;
+
+    // YouTube手動テキストの場合、視聴セッションにも反映する
+    if (isYouTubeWithoutTranscript && manualText.trim() && content.youtubeId) {
+      const hasExisting = watchingSession?.videoId === content.youtubeId;
+      if (hasExisting) {
+        updateTranscript(manualText.trim(), 'manual');
+      } else {
+        startSession(content.youtubeId, manualText.trim(), 'manual');
+      }
+    }
+
     setIsAnalyzing(true);
     setError(null);
     setResult(null);

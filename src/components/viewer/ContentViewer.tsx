@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useViewerStore } from '@/stores/viewer-store';
+import { useWatchingStore } from '@/stores/watching-store';
 
 export function ContentViewer() {
   const content = useViewerStore((s) => s.content);
@@ -40,10 +41,16 @@ export function ContentViewer() {
 
 function CloseButton() {
   const clear = useViewerStore((s) => s.clear);
+  const clearSession = useWatchingStore((s) => s.clearSession);
+
+  const handleClose = () => {
+    clear();
+    clearSession();
+  };
 
   return (
     <button
-      onClick={clear}
+      onClick={handleClose}
       className="rounded-lg p-1.5 text-muted hover:bg-surface-hover hover:text-foreground transition-colors shrink-0"
       aria-label="閉じる"
     >

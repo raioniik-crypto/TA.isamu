@@ -25,6 +25,16 @@ export type TranscriptResult =
   | { ok: true; text: string }
   | { ok: false; error: TranscriptError; detail: string };
 
+/** 時間チャンク付き字幕セグメント */
+export interface TimedSegment {
+  /** 開始時刻（秒） */
+  start: number;
+  /** 長さ（秒） */
+  dur: number;
+  /** テキスト */
+  text: string;
+}
+
 /** 診断ログの1エントリ */
 export interface DiagnosticEntry {
   method: 'innertube' | 'html_scraping';
@@ -560,4 +570,34 @@ function parseTranscriptXml(xml: string): string | null {
   }
 
   return full;
+}
+
+/**
+ * YouTube字幕XMLを時間チャンク付きセグメントに変換する
+ * 将来の再生位置連動用に時刻情報を保持する
+ */
+export function parseTranscriptXmlTimed(xml: string): TimedSegment[] {
+  const segments: TimedSegment[] = [];
+  const regex = /<text\s+start="([^"]*)"(?:\s+dur="([^"]*)")?[^>]*>([\s\S]*?)<\/text>/g;
+  let m;
+
+  while ((m = regex.exec(xml)) !== null) {
+    const start = parseFloat(m[1]) || 0;
+    const dur = parseFloat(m[2]) || 0;
+    let text = m[3];
+    text = text
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\n/g, ' ')
+      .trim();
+    if (text) {
+      segments.push({ start, dur, text });
+    }
+  }
+
+  return segments;
 }

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { UrlBar } from '@/components/viewer/UrlBar';
 import { ContentViewer } from '@/components/viewer/ContentViewer';
+import { VideoQA } from '@/components/viewer/VideoQA';
 import { ViewerAnalysis } from '@/components/viewer/ViewerAnalysis';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
@@ -73,6 +74,7 @@ export default function HomePage() {
       >
         <UrlBar />
         <ContentViewer />
+        <VideoQA />
         <ViewerAnalysis />
       </motion.section>
 
