@@ -26,7 +26,7 @@ export function Header() {
           <span className="text-xl">🌱</span>
           <span className="hidden sm:inline text-base tracking-tight">Aimo</span>
           {hydrated && (
-            <span className="text-[11px] text-muted font-normal ml-0.5 hidden sm:inline">
+            <span className="text-xs text-muted font-normal ml-0.5 hidden sm:inline">
               with {aiName}
             </span>
           )}
@@ -37,7 +37,7 @@ export function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 pathname === item.href
                   ? 'bg-primary text-white shadow-sm'
                   : 'text-muted hover:bg-surface-hover hover:text-foreground'
@@ -47,7 +47,7 @@ export function Header() {
             </Link>
           ))}
           {hydrated && totalInteractions > 0 && (
-            <span className="ml-2 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+            <span className="ml-2 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
               {totalInteractions}回
             </span>
           )}

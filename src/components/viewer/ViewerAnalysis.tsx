@@ -95,7 +95,7 @@ export function ViewerAnalysis() {
         className="rounded-2xl border border-border bg-surface p-4"
         style={{ boxShadow: 'var(--shadow-sm)' }}
       >
-        <p className="mb-3 text-xs font-medium text-muted">
+        <p className="mb-3 text-[13px] font-medium text-muted">
           AIにこのページを解析してもらう
         </p>
 
@@ -104,7 +104,7 @@ export function ViewerAnalysis() {
             <button
               key={type}
               onClick={() => setSelectedType(type)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+              className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-all ${
                 selectedType === type
                   ? 'bg-primary text-white shadow-sm'
                   : 'bg-background text-muted hover:bg-surface-hover hover:text-foreground border border-border'
@@ -118,7 +118,7 @@ export function ViewerAnalysis() {
           <button
             onClick={handleAnalyze}
             disabled={isAnalyzing}
-            className="ml-auto rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-primary-dark active:scale-[0.97] disabled:opacity-40"
+            className="ml-auto rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white transition-all hover:bg-primary-dark active:scale-[0.97] disabled:opacity-40"
           >
             {isAnalyzing ? (
               <span className="flex items-center gap-1.5">
@@ -145,7 +145,7 @@ export function ViewerAnalysis() {
             exit={{ opacity: 0, y: -4 }}
             className="rounded-xl border border-error/20 bg-error/5 px-4 py-3"
           >
-            <p className="text-xs text-foreground">{error}</p>
+            <p className="text-[13px] text-foreground">{error}</p>
           </motion.div>
         )}
       </AnimatePresence>

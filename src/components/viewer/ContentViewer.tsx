@@ -72,8 +72,8 @@ function ArticleReader({ body, url }: { body: string; url: string }) {
   return (
     <div className="max-h-[400px] overflow-y-auto">
       <div className="px-5 py-4">
-        <p className="mb-3 text-xs text-muted truncate">{url}</p>
-        <div className="text-[13.5px] leading-[1.75] text-foreground whitespace-pre-wrap">
+        <p className="mb-3 text-[13px] text-muted truncate">{url}</p>
+        <div className="text-[15px] leading-[1.8] text-foreground whitespace-pre-wrap">
           {body}
         </div>
       </div>

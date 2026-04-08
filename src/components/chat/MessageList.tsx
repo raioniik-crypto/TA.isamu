@@ -27,7 +27,7 @@ export function MessageList({ messages }: MessageListProps) {
           <p className="text-sm font-medium text-foreground mb-1">
             {aiName}に話しかけてみよう
           </p>
-          <p className="text-xs text-muted leading-relaxed">
+          <p className="text-[13px] text-muted leading-relaxed">
             なんでも気軽に聞いてね
           </p>
         </div>
@@ -46,7 +46,7 @@ export function MessageList({ messages }: MessageListProps) {
           className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
         >
           {msg.role === 'assistant' && (
-            <div className="mr-2 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-light to-primary text-[10px] font-bold text-white">
+            <div className="mr-2 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-light to-primary text-[11px] font-bold text-white">
               {aiName.charAt(0)}
             </div>
           )}
@@ -59,12 +59,12 @@ export function MessageList({ messages }: MessageListProps) {
             }`}
           >
             {msg.role === 'assistant' && (
-              <span className="mb-0.5 block text-[11px] font-semibold text-primary">
+              <span className="mb-0.5 block text-xs font-semibold text-primary">
                 {aiName}
               </span>
             )}
-            <p className="whitespace-pre-wrap text-[13.5px] leading-[1.65]">{msg.content}</p>
-            <span className={`mt-1.5 block text-right text-[10px] ${
+            <p className="whitespace-pre-wrap text-[15px] leading-[1.7]">{msg.content}</p>
+            <span className={`mt-1.5 block text-right text-[11px] ${
               msg.role === 'user' ? 'text-white/60' : 'text-muted'
             }`}>
               {new Date(msg.createdAt).toLocaleTimeString('ja-JP', {

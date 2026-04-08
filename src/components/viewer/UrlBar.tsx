@@ -101,7 +101,7 @@ export function UrlBar() {
         <button
           onClick={() => handleOpen()}
           disabled={!url.trim() || isLoading}
-          className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-white transition-all hover:bg-primary-dark active:scale-[0.97] disabled:opacity-40"
+          className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:bg-primary-dark active:scale-[0.97] disabled:opacity-40"
         >
           {isLoading ? (
             <span className="flex items-center gap-1.5">
@@ -129,7 +129,7 @@ export function UrlBar() {
           >
             <div className="flex items-start gap-2.5">
               <span className="mt-0.5 text-sm shrink-0">😥</span>
-              <p className="text-xs text-foreground leading-relaxed">{error}</p>
+              <p className="text-[13px] text-foreground leading-relaxed">{error}</p>
             </div>
           </motion.div>
         )}
@@ -142,14 +142,14 @@ export function UrlBar() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <p className="mb-2 text-xs font-medium text-muted">試してみる</p>
+          <p className="mb-2 text-[13px] font-medium text-muted">試してみる</p>
           <div className="flex flex-wrap gap-2">
             {SAMPLE_URLS.map((s) => (
               <button
                 key={s.url}
                 onClick={() => handleOpen(s.url)}
                 disabled={isLoading}
-                className="rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-foreground transition-all hover:border-primary hover:text-primary active:scale-[0.97] disabled:opacity-40"
+                className="rounded-full border border-border bg-surface px-3.5 py-1.5 text-[13px] text-foreground transition-all hover:border-primary hover:text-primary active:scale-[0.97] disabled:opacity-40"
               >
                 {s.label}
               </button>
@@ -165,7 +165,7 @@ export function UrlBar() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
         >
-          <p className="mb-2 text-xs font-medium text-muted">最近開いたもの</p>
+          <p className="mb-2 text-[13px] font-medium text-muted">最近開いたもの</p>
           <div className="space-y-1">
             {entries.slice(0, 5).map((entry) => (
               <div
@@ -177,10 +177,10 @@ export function UrlBar() {
                   {entry.type === 'youtube' ? '🎬' : '📄'}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-foreground truncate">
+                  <p className="text-[13px] font-medium text-foreground truncate">
                     {entry.title}
                   </p>
-                  <p className="text-[11px] text-muted truncate">
+                  <p className="text-xs text-muted truncate">
                     {entry.url}
                   </p>
                 </div>

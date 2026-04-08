@@ -51,10 +51,10 @@ export default function HomePage() {
               </div>
               <div>
                 <h2 className="font-semibold text-foreground text-base">{displayName}</h2>
-                <p className="text-xs text-primary font-medium">{personality.trait}</p>
+                <p className="text-[13px] text-primary font-medium">{personality.trait}</p>
               </div>
             </div>
-            <span className="rounded-full bg-primary/8 px-3 py-1 text-xs font-semibold text-primary">
+            <span className="rounded-full bg-primary/8 px-3 py-1 text-[13px] font-semibold text-primary">
               {displayCount}回会話
             </span>
           </div>
@@ -86,7 +86,7 @@ export default function HomePage() {
         <h3 className="mb-3 text-sm font-semibold text-foreground">
           使い方ヒント
         </h3>
-        <ul className="space-y-2.5 text-[13px] text-muted">
+        <ul className="space-y-2.5 text-sm text-muted">
           <li className="flex items-start gap-2.5">
             <span className="mt-0.5 text-primary shrink-0">1.</span>
             右下の <span className="text-primary font-medium">{displayName}</span> をタップして会話を始めよう

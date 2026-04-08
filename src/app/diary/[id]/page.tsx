@@ -55,7 +55,7 @@ export default function DiaryDetailPage() {
             <h1 className="text-xl font-bold text-foreground">
               {diary.title}
             </h1>
-            <p className="text-xs text-muted">
+            <p className="text-[13px] text-muted">
               {date.toLocaleDateString('ja-JP', {
                 year: 'numeric',
                 month: 'long',
@@ -77,14 +77,14 @@ export default function DiaryDetailPage() {
 
         {diary.topics.length > 0 && (
           <div className="mb-4">
-            <h2 className="mb-2 text-xs font-semibold text-muted uppercase tracking-wide">
+            <h2 className="mb-2 text-[13px] font-semibold text-muted uppercase tracking-wide">
               トピック
             </h2>
             <div className="flex flex-wrap gap-2">
               {diary.topics.map((topic) => (
                 <span
                   key={topic}
-                  className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
+                  className="rounded-full bg-primary/10 px-3 py-1 text-[13px] text-primary"
                 >
                   {topic}
                 </span>
@@ -93,7 +93,7 @@ export default function DiaryDetailPage() {
           </div>
         )}
 
-        <div className="flex items-center gap-2 text-xs text-muted">
+        <div className="flex items-center gap-2 text-[13px] text-muted">
           <span>気分:</span>
           <span className="rounded-full bg-surface-hover px-2 py-0.5">
             {emoji} {diary.mood}

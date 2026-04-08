@@ -54,7 +54,7 @@ export default function ProfilePage() {
           <p className="text-sm text-muted leading-relaxed">
             {personality.description}
           </p>
-          <div className="mt-3 flex gap-4 text-xs text-muted">
+          <div className="mt-3 flex gap-4 text-[13px] text-muted">
             <span>会話: {displayCount}回</span>
             {hydrated && (
               <span>
@@ -90,9 +90,9 @@ export default function ProfilePage() {
                     <span className="text-sm font-medium text-foreground">
                       {label}
                     </span>
-                    <span className="ml-2 text-xs text-muted">{desc}</span>
+                    <span className="ml-2 text-[13px] text-muted">{desc}</span>
                   </div>
-                  <span className="text-xs text-muted">
+                  <span className="text-[13px] text-muted font-medium">
                     {Math.round(displayParams[key] * 100)}%
                   </span>
                 </div>

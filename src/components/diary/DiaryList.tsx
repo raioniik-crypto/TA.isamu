@@ -15,7 +15,7 @@ export function DiaryList({ diaries }: DiaryListProps) {
         <p className="text-sm text-muted">
           まだ日記はありません
         </p>
-        <p className="text-xs text-muted mt-1">
+        <p className="text-[13px] text-muted mt-1">
           AIと会話すると、学習日記が生まれます
         </p>
       </div>

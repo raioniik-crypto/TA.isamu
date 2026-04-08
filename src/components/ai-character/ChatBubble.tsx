@@ -19,7 +19,7 @@ export function ChatBubble({ message, visible }: ChatBubbleProps) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.85, y: 8 }}
           transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          className="absolute bottom-full right-0 mb-3 w-64 rounded-2xl rounded-br-md bg-surface p-4 text-[13px] border border-border"
+          className="absolute bottom-full right-0 mb-3 w-64 rounded-2xl rounded-br-md bg-surface p-4 text-sm border border-border"
           style={{ boxShadow: 'var(--shadow-md)' }}
         >
           <p className="text-foreground leading-relaxed">{message}</p>

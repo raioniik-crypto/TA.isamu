@@ -51,11 +51,11 @@ export function AnalysisResult({
         </button>
       </div>
 
-      <p className="mb-3 text-xs text-muted truncate">
+      <p className="mb-3 text-[13px] text-muted truncate">
         {url}
       </p>
 
-      <div className="rounded-xl bg-background p-4 text-[13.5px] leading-[1.75] text-foreground whitespace-pre-wrap">
+      <div className="rounded-xl bg-background p-4 text-[15px] leading-[1.8] text-foreground whitespace-pre-wrap">
         {content}
       </div>
     </motion.div>

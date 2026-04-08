@@ -42,7 +42,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           placeholder="メッセージを入力..."
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none bg-transparent text-[13.5px] text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50 leading-relaxed"
+          className="flex-1 resize-none bg-transparent text-[15px] text-foreground placeholder:text-muted focus:outline-none disabled:opacity-50 leading-relaxed"
           style={{ maxHeight: '80px' }}
         />
         <button

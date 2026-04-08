@@ -87,7 +87,7 @@ export function SettingsForm() {
         <h3 className="mb-3 text-sm font-semibold text-foreground">
           プライバシーについて
         </h3>
-        <div className="text-xs text-muted space-y-2 leading-relaxed">
+        <div className="text-[13px] text-muted space-y-2 leading-relaxed">
           <p>
             Aimo は、あなたのデータをブラウザ内（localStorage）に保存します。
             サーバーにデータが送信されることはありません（チャットAPIへの送信を除く）。
@@ -107,7 +107,7 @@ export function SettingsForm() {
         <h3 className="mb-3 text-sm font-semibold text-error">
           データの削除
         </h3>
-        <p className="mb-3 text-xs text-muted">
+        <p className="mb-3 text-[13px] text-muted">
           すべての会話履歴、日記、AI育成データが削除されます。この操作は取り消せません。
         </p>
         {showDeleteConfirm ? (

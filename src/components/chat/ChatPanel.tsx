@@ -110,7 +110,7 @@ export function ChatPanel({ onClose, onMinimize }: ChatPanelProps) {
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground leading-tight">{aiName}</h3>
-            <p className="text-[10px] text-muted leading-tight">オンライン</p>
+            <p className="text-[11px] text-muted leading-tight">オンライン</p>
           </div>
         </div>
         <div className="flex items-center gap-0.5">

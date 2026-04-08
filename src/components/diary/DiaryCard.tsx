@@ -39,7 +39,7 @@ export function DiaryCard({ diary, index }: DiaryCardProps) {
                 {diary.title}
               </h3>
             </div>
-            <p className="text-xs text-muted leading-relaxed line-clamp-2">
+            <p className="text-[13px] text-muted leading-relaxed line-clamp-2">
               {diary.summary}
             </p>
             {diary.topics.length > 0 && (
@@ -47,7 +47,7 @@ export function DiaryCard({ diary, index }: DiaryCardProps) {
                 {diary.topics.map((topic) => (
                   <span
                     key={topic}
-                    className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary"
+                    className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] text-primary"
                   >
                     {topic}
                   </span>
@@ -56,13 +56,13 @@ export function DiaryCard({ diary, index }: DiaryCardProps) {
             )}
           </div>
           <div className="text-right shrink-0">
-            <p className="text-xs text-muted">
+            <p className="text-[13px] text-muted">
               {date.toLocaleDateString('ja-JP', {
                 month: 'short',
                 day: 'numeric',
               })}
             </p>
-            <p className="text-[10px] text-muted">
+            <p className="text-[11px] text-muted">
               {date.toLocaleTimeString('ja-JP', {
                 hour: '2-digit',
                 minute: '2-digit',
