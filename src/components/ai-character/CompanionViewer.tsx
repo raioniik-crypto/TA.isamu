@@ -76,6 +76,7 @@ export function CompanionViewer() {
           <ChatBubble
             message={reaction?.message ?? null}
             visible={!isOpen && !!reaction?.message}
+            centered
           />
 
           <CharacterAvatar
