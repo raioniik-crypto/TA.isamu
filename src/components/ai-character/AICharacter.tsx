@@ -13,6 +13,7 @@ import { ChatPanel } from '@/components/chat/ChatPanel';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useChatStore } from '@/stores/chat-store';
 import { useViewerStore } from '@/stores/viewer-store';
+import { useReactionStore } from '@/stores/reaction-store';
 import { useHydration } from '@/stores/use-hydration';
 import type { CharacterExpression } from '@/types';
 
@@ -113,6 +114,8 @@ export default function AICharacter() {
   const wanderMode = useSettingsStore((s) => s.wanderMode);
   const isSending = useChatStore((s) => s.isSending);
   const isLoading = useViewerStore((s) => s.isLoading);
+  const reaction = useReactionStore((s) => s.reaction);
+  const clearReaction = useReactionStore((s) => s.clearReaction);
   const displayName = hydrated ? aiName : 'アイモ';
 
   const x = useMotionValue(0);
@@ -122,9 +125,17 @@ export default function AICharacter() {
   const isWandering = useRef(true);
   const initialized = useRef(false);
 
+  // Auto-clear reaction after 4 seconds
+  useEffect(() => {
+    if (!reaction) return;
+    const timer = setTimeout(clearReaction, 4000);
+    return () => clearTimeout(timer);
+  }, [reaction, clearReaction]);
+
   // Derive expression from app state
   const expression: CharacterExpression = (() => {
     if (isSending || isLoading) return 'thinking';
+    if (reaction) return reaction.expression;
     if (greeting) return 'happy';
     return 'neutral';
   })();
@@ -330,8 +341,11 @@ export default function AICharacter() {
         )}
       </AnimatePresence>
 
-      {/* Chat bubble */}
-      <ChatBubble message={greeting} visible={!isOpen && !!greeting} />
+      {/* Chat bubble — reaction messages take priority over greeting */}
+      <ChatBubble
+        message={reaction?.message ?? greeting}
+        visible={!isOpen && !!(reaction?.message || greeting)}
+      />
 
       {/* Character */}
       <CharacterAvatar
