@@ -47,8 +47,8 @@
     ],
     "Stop": [
       {
-        "command": "npm run build 2>&1 | tail -20; echo \"EXIT_CODE: $?\"",
-        "description": "タスク完了前ビルド検証"
+        "command": "npm run typecheck > /tmp/claude_typecheck.log 2>&1; tc=$?; npm run build > /tmp/claude_build.log 2>&1; bc=$?; echo '=== typecheck ==='; tail -10 /tmp/claude_typecheck.log; echo \"TYPECHECK_EXIT: $tc\"; echo '=== build ==='; tail -20 /tmp/claude_build.log; echo \"BUILD_EXIT: $bc\"; [ $tc -eq 0 ] && [ $bc -eq 0 ] || exit 1",
+        "description": "タスク完了前にtypecheck+build検証（終了コードを正確に捕捉）"
       }
     ]
   }
