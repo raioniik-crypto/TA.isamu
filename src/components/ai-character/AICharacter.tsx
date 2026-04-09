@@ -14,19 +14,11 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { useChatStore } from '@/stores/chat-store';
 import { useViewerStore } from '@/stores/viewer-store';
 import { useReactionStore } from '@/stores/reaction-store';
+import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useHydration } from '@/stores/use-hydration';
+import { pickReactionMessage } from '@/lib/reaction-messages';
 import type { CharacterExpression } from '@/types';
 
-const GREETINGS = [
-  'やあ！今日はなにを調べようか？',
-  'こんにちは！一緒に学ぼう！',
-  '何か気になることはある？',
-  '今日も楽しく探検しよう！',
-];
-
-// ── Page load reaction messages ──
-const PAGE_ARTICLE_MSGS = ['どんな記事かな？', '一緒に読もう！', '気になるね！'];
-const PAGE_YOUTUBE_MSGS = ['動画だ！見てみよう！', '一緒に見よう！', 'どんな動画かな？'];
 /** Minimum interval between page reactions (ms) */
 const PAGE_REACTION_COOLDOWN = 30_000;
 
@@ -156,9 +148,9 @@ export default function AICharacter() {
       // Don't interrupt active chat
       if (useChatStore.getState().isSending) return;
       lastPageReactionAt.current = Date.now();
-      const msgs =
-        viewerContent.type === 'youtube' ? PAGE_YOUTUBE_MSGS : PAGE_ARTICLE_MSGS;
-      triggerReaction('happy', msgs[Math.floor(Math.random() * msgs.length)]);
+      const ctx = viewerContent.type === 'youtube' ? 'page-youtube' : 'page-article';
+      const currentParams = useAIProfileStore.getState().params;
+      triggerReaction('happy', pickReactionMessage(ctx, currentParams));
     }, 800);
     return () => clearTimeout(timer);
   }, [viewerContent, isClient, hydrated, triggerReaction]);
@@ -262,12 +254,12 @@ export default function AICharacter() {
     };
   }, [isClient, hydrated, isOpen, isMinimized, wanderMode, startWandering, walkTo, isSitting]);
 
-  // Greeting
+  // Greeting (personality-aware)
   useEffect(() => {
     if (!isClient || !hydrated) return;
     const timer = setTimeout(() => {
-      const msg = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
-      setGreeting(msg);
+      const currentParams = useAIProfileStore.getState().params;
+      setGreeting(pickReactionMessage('greeting', currentParams));
     }, 1500);
     const hideTimer = setTimeout(() => setGreeting(null), 6000);
     return () => {

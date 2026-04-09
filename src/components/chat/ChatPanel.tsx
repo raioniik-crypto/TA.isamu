@@ -5,6 +5,7 @@ import { useChatStore } from '@/stores/chat-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useReactionStore } from '@/stores/reaction-store';
+import { pickReactionMessage } from '@/lib/reaction-messages';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import type { GrowthDelta } from '@/types';
@@ -15,24 +16,12 @@ const HAPPY_PATTERN =
 const SURPRISED_PATTERN =
   /びっくり|驚|意外|知らなかった|気をつけ|注意/;
 
-const CHAT_HAPPY_MSGS = ['うんうん！', 'いい話だね！', 'なんだかうれしいな'];
-const CHAT_SURPRISED_MSGS = ['おっ！', 'へぇ〜！', 'そうなんだ！'];
-
-function pick<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
 /** Detect emotion from the assistant response text. Returns null most of the time to stay subtle. */
 function detectChatEmotion(
   text: string,
-): { expression: 'happy' | 'surprised'; message: string } | null {
-  // Check surprised first — more specific, less common
-  if (SURPRISED_PATTERN.test(text) && Math.random() < 0.7) {
-    return { expression: 'surprised', message: pick(CHAT_SURPRISED_MSGS) };
-  }
-  if (HAPPY_PATTERN.test(text) && Math.random() < 0.5) {
-    return { expression: 'happy', message: pick(CHAT_HAPPY_MSGS) };
-  }
+): 'happy' | 'surprised' | null {
+  if (SURPRISED_PATTERN.test(text) && Math.random() < 0.7) return 'surprised';
+  if (HAPPY_PATTERN.test(text) && Math.random() < 0.5) return 'happy';
   return null;
 }
 
@@ -103,10 +92,11 @@ export function ChatPanel({ onClose, onMinimize }: ChatPanelProps) {
         }
         incrementInteractions();
 
-        // Trigger character emotion based on response content
+        // Trigger character emotion based on response content (personality-aware)
         const emotion = detectChatEmotion(data.content);
         if (emotion) {
-          triggerReaction(emotion.expression, emotion.message);
+          const ctx = emotion === 'happy' ? 'chat-happy' : 'chat-surprised';
+          triggerReaction(emotion, pickReactionMessage(ctx, params));
         }
       } catch {
         addMessage(convId, {
