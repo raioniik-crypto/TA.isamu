@@ -128,7 +128,7 @@ export function CharacterAvatar({
           style={{
             transform: facingLeft ? 'scaleX(-1)' : undefined,
             transformOrigin: 'top center',
-            animation: 'aimo-blink 4s ease-in-out infinite',
+            animation: 'aimo-blink 5s ease-in-out infinite',
           }}
         >
           <Image

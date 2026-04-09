@@ -109,12 +109,12 @@ button, a, input, textarea {
   color: white;
 }
 
-/* Character blink animation — brief vertical squash simulating eyelid closure */
+/* Character blink animation — very subtle vertical squash (top-anchored) */
 @keyframes aimo-blink {
-  0%, 90%, 100% { transform: scaleY(1); }
-  92% { transform: scaleY(0.95); }
-  94% { transform: scaleY(0.85); }
-  96% { transform: scaleY(0.95); }
+  0%, 93%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.985); }
+  96% { transform: scaleY(0.97); }
+  97% { transform: scaleY(0.985); }
 }
 
 /* Idle glance — subtle head tilt implying the character is looking around */
