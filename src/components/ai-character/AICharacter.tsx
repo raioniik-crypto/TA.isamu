@@ -273,6 +273,9 @@ export default function AICharacter() {
 
   if (!isClient) return null;
 
+  // Hide floating character when YouTube companion viewer is active
+  if (viewerContent?.type === 'youtube') return null;
+
   if (isMinimized) {
     return (
       <motion.button
