@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import type { CharacterExpression } from '@/types';
@@ -25,6 +26,40 @@ export function CharacterAvatar({
 }: CharacterAvatarProps) {
   const h = Math.round(size * 1.4);
 
+  // ── Idle glance reaction: periodically trigger a "looking around" motion ──
+  const [isGlancing, setIsGlancing] = useState(false);
+
+  const scheduleGlance = useCallback(() => {
+    const delay = 12_000 + Math.random() * 6_000; // 12–18s
+    return setTimeout(() => setIsGlancing(true), delay);
+  }, []);
+
+  useEffect(() => {
+    // Only glance when truly idle (not walking, sitting, or thinking)
+    if (isWalking || isSitting || isThinking) {
+      setIsGlancing(false); // eslint-disable-line react-hooks/set-state-in-effect -- resets flag when no longer idle
+      return;
+    }
+    const timer = scheduleGlance();
+    return () => clearTimeout(timer);
+  }, [isWalking, isSitting, isThinking, scheduleGlance]);
+
+  // Reset glance flag after animation completes, then schedule next
+  useEffect(() => {
+    if (!isGlancing) return;
+    const reset = setTimeout(() => {
+      setIsGlancing(false);
+    }, 1800); // matches glance animation duration
+    return () => clearTimeout(reset);
+  }, [isGlancing]);
+
+  // Schedule next glance after previous one ends
+  useEffect(() => {
+    if (isGlancing || isWalking || isSitting || isThinking) return;
+    const timer = scheduleGlance();
+    return () => clearTimeout(timer);
+  }, [isGlancing, isWalking, isSitting, isThinking, scheduleGlance]);
+
   const getAnimation = () => {
     if (isSitting) {
       return { rotate: -3, scaleY: 1, y: 0 };
@@ -38,8 +73,19 @@ export function CharacterAvatar({
     if (isThinking) {
       return { y: [0, -4, 4, 0], rotate: [0, -2, 2, 0] };
     }
-    // Idle: very subtle scale breathing (no vertical float)
-    return { scaleY: [1, 1.005, 1], scaleX: [1, 0.995, 1] };
+    if (isGlancing) {
+      // Quick "looking around" tilt — larger than idle breathing
+      return {
+        rotate: [0, 3, -2.5, 0.5, 0],
+        scaleY: [1, 1.01, 1, 1.005, 1],
+      };
+    }
+    // Idle: subtle breathing with gentle head sway
+    return {
+      scaleY: [1, 1.005, 1],
+      scaleX: [1, 0.995, 1],
+      rotate: [0, -0.8, 0, 0.8, 0],
+    };
   };
 
   const getTransition = () => {
@@ -52,7 +98,11 @@ export function CharacterAvatar({
     if (isThinking) {
       return { repeat: Infinity, duration: 1.4, ease: 'easeInOut' as const };
     }
-    return { repeat: Infinity, duration: 4, ease: 'easeInOut' as const };
+    if (isGlancing) {
+      return { duration: 1.8, ease: 'easeInOut' as const };
+    }
+    // Idle breathing cycle — slow and natural
+    return { repeat: Infinity, duration: 5, ease: 'easeInOut' as const };
   };
 
   return (
@@ -73,18 +123,21 @@ export function CharacterAvatar({
         transition={getTransition()}
         style={{ transformOrigin: 'bottom center' }}
       >
-        <div style={{ transform: facingLeft ? 'scaleX(-1)' : undefined }}>
+        {/* Blink wrapper — CSS keyframe applies vertical squash from top */}
+        <div
+          style={{
+            transform: facingLeft ? 'scaleX(-1)' : undefined,
+            transformOrigin: 'top center',
+            animation: 'aimo-blink 4s ease-in-out infinite',
+          }}
+        >
           <Image
             src="/characters/phil-default.png"
             alt="Aimo"
             width={size}
             height={h}
             className="object-contain pointer-events-none"
-            style={{
-              width: size,
-              height: h,
-              animation: 'aimo-blink 5s ease-in-out infinite',
-            }}
+            style={{ width: size, height: h }}
             priority
             draggable={false}
           />

@@ -109,10 +109,20 @@ button, a, input, textarea {
   color: white;
 }
 
-/* Character blink animation */
+/* Character blink animation — brief vertical squash simulating eyelid closure */
 @keyframes aimo-blink {
-  0%, 92%, 96%, 100% { opacity: 1; }
-  94% { opacity: 0.82; }
+  0%, 90%, 100% { transform: scaleY(1); }
+  92% { transform: scaleY(0.95); }
+  94% { transform: scaleY(0.85); }
+  96% { transform: scaleY(0.95); }
+}
+
+/* Idle glance — subtle head tilt implying the character is looking around */
+@keyframes aimo-glance {
+  0%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(2.5deg); }
+  60% { transform: rotate(-2deg); }
+  80% { transform: rotate(0.5deg); }
 }
 
 /* Minimum font size on small screens */
