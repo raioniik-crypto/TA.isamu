@@ -240,7 +240,9 @@ export default function AICharacter() {
     };
   }, [isClient, hydrated]);
 
-  // ── No browser-dependent rendering before client mount ──
+  // drag is only enabled after hydration so SSR and client initial render match
+  const canDrag = hydrated && isDesktop();
+
   if (!isClient) return null;
 
   if (isMinimized) {
@@ -278,10 +280,10 @@ export default function AICharacter() {
         x,
         y,
         width: charSize,
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: canDrag ? (isDragging ? 'grabbing' : 'grab') : 'default',
         touchAction: 'none',
       }}
-      drag={isDesktop()}
+      drag={canDrag}
       dragMomentum={false}
       dragElastic={0.1}
       onDragStart={() => {
