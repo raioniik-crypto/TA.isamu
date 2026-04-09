@@ -68,13 +68,11 @@ function extractMappedIPv4(tail: string): string | null {
   // Hex-hextet format: "7f00:1" or "7f00:0001"
   const parts = tail.split(':');
   if (parts.length !== 2) return null;
+  // Strict hex validation — prevent parseInt partial parsing (e.g. "7fzz" → 0x7f)
+  const HEX = /^[0-9a-f]{1,4}$/i;
+  if (!HEX.test(parts[0]) || !HEX.test(parts[1])) return null;
   const hi = parseInt(parts[0], 16);
   const lo = parseInt(parts[1], 16);
-  if (
-    isNaN(hi) || isNaN(lo) ||
-    hi < 0 || hi > 0xffff ||
-    lo < 0 || lo > 0xffff
-  ) return null;
   return `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
 }
 

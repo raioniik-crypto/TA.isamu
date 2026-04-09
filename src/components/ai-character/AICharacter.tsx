@@ -24,10 +24,10 @@ const PAGE_REACTION_COOLDOWN = 30_000;
 
 function getCharacterSize(): number {
   const w = window.innerWidth;
-  if (w >= 1280) return 200;
-  if (w >= 1024) return 160;
-  if (w >= 768) return 130;
-  return 90;
+  if (w >= 1280) return 300;
+  if (w >= 1024) return 240;
+  if (w >= 768) return 195;
+  return 135;
 }
 
 function getHomePosition(): { x: number; y: number } {
@@ -268,10 +268,13 @@ export default function AICharacter() {
     };
   }, [isClient, hydrated]);
 
-  // drag is only enabled after hydration so SSR and client initial render match
-  const canDrag = hydrated && isDesktop();
+  // drag is enabled on all devices after hydration
+  const canDrag = hydrated;
 
   if (!isClient) return null;
+
+  // Hide floating character when YouTube companion viewer is active
+  if (viewerContent?.type === 'youtube') return null;
 
   if (isMinimized) {
     return (

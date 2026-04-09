@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ContentViewer } from '@/components/viewer/ContentViewer';
-import { VideoQA } from '@/components/viewer/VideoQA';
 import { ViewerAnalysis } from '@/components/viewer/ViewerAnalysis';
+import { CompanionViewer } from '@/components/ai-character/CompanionViewer';
 import { BrowserHome } from '@/components/browser/BrowserHome';
 import { useViewerStore } from '@/stores/viewer-store';
 import { useSettingsStore } from '@/stores/settings-store';
@@ -68,28 +68,19 @@ export default function HomePage() {
           animate={{ opacity: 1 }}
           className="mt-4 space-y-4"
         >
-          {/* Theater layout: video + QA side by side */}
-          {isTheater && isYouTube ? (
+          {/* YouTube: companion watching layout */}
+          {isYouTube ? (
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
-                <ContentViewer
-                  isTheater
-                  onToggleTheater={() => setIsTheater(false)}
-                />
-                <VideoQA />
-              </div>
-              <ViewerAnalysis />
+              <ContentViewer
+                isTheater={isTheater}
+                onToggleTheater={() => setIsTheater(!isTheater)}
+              />
+              <CompanionViewer />
             </>
           ) : (
             <>
-              <ContentViewer
-                isTheater={false}
-                onToggleTheater={
-                  isYouTube ? () => setIsTheater(true) : undefined
-                }
-              />
+              <ContentViewer isTheater={false} />
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <VideoQA />
                 <ViewerAnalysis />
               </div>
             </>
