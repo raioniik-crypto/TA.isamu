@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from 'react';
 import {
   motion,
   AnimatePresence,
@@ -98,7 +98,7 @@ function findSnapTarget(
 // Named exports + ssr:false is broken in Next.js 16.
 export default function AICharacter() {
   // ── All hooks must be called unconditionally ──
-  const [isClient, setIsClient] = useState(false);
+  const isClient = useSyncExternalStore(() => () => {}, () => true, () => false);
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [greeting, setGreeting] = useState<string | null>(null);
@@ -112,7 +112,6 @@ export default function AICharacter() {
   const aiName = useSettingsStore((s) => s.aiName);
   const wanderMode = useSettingsStore((s) => s.wanderMode);
   const isSending = useChatStore((s) => s.isSending);
-  const hasContent = useViewerStore((s) => !!s.content);
   const isLoading = useViewerStore((s) => s.isLoading);
   const displayName = hydrated ? aiName : 'アイモ';
 
@@ -130,16 +129,11 @@ export default function AICharacter() {
     return 'neutral';
   })();
 
-  // Mark client-side mount
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   // Initialize size + position (only runs on client after mount)
   useEffect(() => {
     if (!isClient) return;
     const size = getCharacterSize();
-    setCharSize(size);
+    setCharSize(size); // eslint-disable-line react-hooks/set-state-in-effect -- syncs with window dimensions
     const home = getHomePosition();
     x.set(home.x);
     y.set(home.y);
@@ -213,7 +207,7 @@ export default function AICharacter() {
 
       if (!isSitting) {
         const home = getHomePosition();
-        walkTo(home.x, home.y);
+        walkTo(home.x, home.y); // eslint-disable-line react-hooks/set-state-in-effect -- syncs animation with motion values
       }
     } else {
       isWandering.current = true;

@@ -1,6 +1,8 @@
 /**
  * ページ読解エラーのユーザー向けメッセージ
  */
+import { isBlockedUrl } from '@/lib/security/ssrf';
+
 export class PageReadError extends Error {
   public readonly userMessage: string;
 
@@ -12,36 +14,21 @@ export class PageReadError extends Error {
 }
 
 /**
- * URLのバリデーション
+ * URLのバリデーション（SSRF 防御付き）
  */
 function validateUrl(url: string): void {
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    throw new PageReadError(
-      'URLの形式が正しくないようです。「https://」から始まるURLを入力してください。',
-    );
-  }
-
-  if (!['http:', 'https:'].includes(parsed.protocol)) {
-    throw new PageReadError(
-      'httpまたはhttpsから始まるURLを入力してください。',
-    );
-  }
-
-  // ローカルアドレスをブロック
-  const host = parsed.hostname;
-  if (
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    host.startsWith('192.168.') ||
-    host.startsWith('10.') ||
-    host === '0.0.0.0'
-  ) {
-    throw new PageReadError(
-      'ローカルネットワークのページは読み取れません。公開されているWebページのURLを入力してください。',
-    );
+  if (isBlockedUrl(url)) {
+    // isBlockedUrl は URL パースに失敗した場合も true を返す
+    let reason = 'ローカルネットワークのページは読み取れません。公開されているWebページのURLを入力してください。';
+    try {
+      const parsed = new URL(url);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        reason = 'httpまたはhttpsから始まるURLを入力してください。';
+      }
+    } catch {
+      reason = 'URLの形式が正しくないようです。「https://」から始まるURLを入力してください。';
+    }
+    throw new PageReadError(reason);
   }
 }
 
@@ -81,21 +68,58 @@ export async function extractPage(url: string): Promise<{ text: string; title: s
 /**
  * HTMLを取得してバリデーション済みで返す
  */
+const MAX_REDIRECTS = 5;
+
+const FETCH_HEADERS = {
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'ja,en;q=0.9',
+};
+
+/**
+ * リダイレクトを手動で追跡し、各ホップ先を SSRF チェック
+ */
+async function fetchWithRedirects(startUrl: string): Promise<Response> {
+  let currentUrl = startUrl;
+  for (let hop = 0; ; hop++) {
+    const res = await fetch(currentUrl, {
+      headers: FETCH_HEADERS,
+      redirect: 'manual',
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (![301, 302, 303, 307, 308].includes(res.status)) {
+      return res;
+    }
+
+    const location = res.headers.get('location');
+    if (!location) return res;
+
+    const nextUrl = new URL(location, currentUrl).href;
+
+    if (isBlockedUrl(nextUrl)) {
+      throw new PageReadError(
+        'リダイレクト先がブロック対象のアドレスです。安全でないURLへの転送を検出しました。',
+      );
+    }
+
+    if (hop >= MAX_REDIRECTS) {
+      throw new PageReadError(
+        'リダイレクトが多すぎます。URLを確認してください。',
+      );
+    }
+
+    currentUrl = nextUrl;
+  }
+}
+
 async function fetchHtml(url: string): Promise<string> {
   validateUrl(url);
 
   let res: Response;
   try {
-    res = await fetch(url, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'ja,en;q=0.9',
-      },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(15000),
-    });
+    res = await fetchWithRedirects(url);
   } catch (e) {
     if (e instanceof PageReadError) throw e;
     const isTimeout =
