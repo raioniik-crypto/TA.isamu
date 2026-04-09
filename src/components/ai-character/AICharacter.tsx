@@ -24,7 +24,6 @@ const GREETINGS = [
 ];
 
 function getCharacterSize(): number {
-  if (typeof window === 'undefined') return 100;
   const w = window.innerWidth;
   if (w >= 1280) return 200;
   if (w >= 1024) return 160;
@@ -33,7 +32,6 @@ function getCharacterSize(): number {
 }
 
 function getHomePosition(): { x: number; y: number } {
-  if (typeof window === 'undefined') return { x: 40, y: 40 };
   const w = window.innerWidth;
   const h = window.innerHeight;
   const size = getCharacterSize();
@@ -45,7 +43,6 @@ function getHomePosition(): { x: number; y: number } {
 }
 
 function getRandomSafePosition(): { x: number; y: number } {
-  if (typeof window === 'undefined') return { x: 40, y: 40 };
   const w = window.innerWidth;
   const h = window.innerHeight;
   const size = getCharacterSize();
@@ -61,7 +58,6 @@ function getRandomSafePosition(): { x: number; y: number } {
 }
 
 function isDesktop(): boolean {
-  if (typeof window === 'undefined') return false;
   return window.innerWidth >= 1024;
 }
 
@@ -98,7 +94,11 @@ function findSnapTarget(
   return snapPos;
 }
 
-export function AICharacter() {
+// Default export required for next/dynamic ssr:false to work correctly.
+// Named exports + ssr:false is broken in Next.js 16.
+export default function AICharacter() {
+  // ── All hooks must be called unconditionally ──
+  const [isClient, setIsClient] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [greeting, setGreeting] = useState<string | null>(null);
@@ -127,12 +127,17 @@ export function AICharacter() {
   const expression: CharacterExpression = (() => {
     if (isSending || isLoading) return 'thinking';
     if (greeting) return 'happy';
-    if (hasContent) return 'neutral';
     return 'neutral';
   })();
 
-  // Initialize
+  // Mark client-side mount
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Initialize size + position (only runs on client after mount)
+  useEffect(() => {
+    if (!isClient) return;
     const size = getCharacterSize();
     setCharSize(size);
     const home = getHomePosition();
@@ -150,7 +155,7 @@ export function AICharacter() {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isClient]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Smooth walk animation
   const walkTo = useCallback(
@@ -199,7 +204,7 @@ export function AICharacter() {
   }, [wanderMode, walkTo]);
 
   useEffect(() => {
-    if (!hydrated || !initialized.current) return;
+    if (!isClient || !hydrated || !initialized.current) return;
 
     if (isOpen || isMinimized || !wanderMode) {
       isWandering.current = false;
@@ -219,11 +224,11 @@ export function AICharacter() {
     return () => {
       if (wanderTimer.current) clearInterval(wanderTimer.current);
     };
-  }, [hydrated, isOpen, isMinimized, wanderMode, startWandering, walkTo, isSitting]);
+  }, [isClient, hydrated, isOpen, isMinimized, wanderMode, startWandering, walkTo, isSitting]);
 
   // Greeting
   useEffect(() => {
-    if (!hydrated) return;
+    if (!isClient || !hydrated) return;
     const timer = setTimeout(() => {
       const msg = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
       setGreeting(msg);
@@ -233,7 +238,10 @@ export function AICharacter() {
       clearTimeout(timer);
       clearTimeout(hideTimer);
     };
-  }, [hydrated]);
+  }, [isClient, hydrated]);
+
+  // ── No browser-dependent rendering before client mount ──
+  if (!isClient) return null;
 
   if (isMinimized) {
     return (
