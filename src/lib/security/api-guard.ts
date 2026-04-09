@@ -19,6 +19,12 @@ interface GuardOptions {
   windowMs?: number;
 }
 
+/**
+ * クライアント IP を取得する。
+ * 前提: Vercel 等の信頼済みリバースプロキシが X-Forwarded-For を上書きすること。
+ * 信頼できないプロキシ環境では、攻撃者がヘッダを偽装してレートリミットを回避できる。
+ * 自前ホスティング時は req.ip やプロキシ設定の見直しが必要。
+ */
 function clientIp(req: NextRequest): string {
   return (
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||

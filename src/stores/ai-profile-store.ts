@@ -52,7 +52,10 @@ export const useAIProfileStore = create<AIProfileState>()(
           totalInteractions: s.totalInteractions + 1,
           updatedAt: new Date().toISOString(),
         })),
-      reset: () => set({ ...initialProfile, id: uuidv4() }),
+      reset: () => {
+        const now = new Date().toISOString();
+        set({ ...initialProfile, id: uuidv4(), createdAt: now, updatedAt: now });
+      },
     }),
     { name: 'ta-isamu:ai-profile' },
   ),
