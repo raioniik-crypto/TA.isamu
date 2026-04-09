@@ -55,6 +55,29 @@ function isBlockedIPv4(host: string): boolean {
   return false;
 }
 
+/**
+ * IPv4-mapped IPv6 の末尾から dotted IPv4 文字列を抽出する。
+ * dotted 形式 (127.0.0.1) と hex-hextet 形式 (7f00:1) の両方に対応。
+ * パース不能な場合は null を返す。
+ */
+function extractMappedIPv4(tail: string): string | null {
+  // Dotted format: "127.0.0.1"
+  if (tail.includes('.')) {
+    return ipv4ToUint32(tail) !== null ? tail : null;
+  }
+  // Hex-hextet format: "7f00:1" or "7f00:0001"
+  const parts = tail.split(':');
+  if (parts.length !== 2) return null;
+  const hi = parseInt(parts[0], 16);
+  const lo = parseInt(parts[1], 16);
+  if (
+    isNaN(hi) || isNaN(lo) ||
+    hi < 0 || hi > 0xffff ||
+    lo < 0 || lo > 0xffff
+  ) return null;
+  return `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
+}
+
 function isBlockedIPv6(host: string): boolean {
   const h = host.toLowerCase().replace(/^\[|\]$/g, '');
   // IPv6 addresses always contain ':'. Without it, the host is a domain name
@@ -65,9 +88,12 @@ function isBlockedIPv6(host: string): boolean {
   if (h.startsWith('fc') || h.startsWith('fd')) return true;
   // Link-local fe80::/10
   if (/^fe[89ab]/.test(h)) return true;
-  // IPv4-mapped ::ffff:x.x.x.x
+  // IPv4-mapped ::ffff:x.x.x.x or ::ffff:HHHH:HHHH
   if (h.startsWith('::ffff:')) {
-    return isBlockedIPv4(h.slice(7));
+    const ipv4 = extractMappedIPv4(h.slice(7));
+    // Fail-closed: malformed mapped addresses are blocked
+    if (ipv4 === null) return true;
+    return isBlockedIPv4(ipv4);
   }
   return false;
 }
