@@ -57,6 +57,9 @@ function isBlockedIPv4(host: string): boolean {
 
 function isBlockedIPv6(host: string): boolean {
   const h = host.toLowerCase().replace(/^\[|\]$/g, '');
+  // IPv6 addresses always contain ':'. Without it, the host is a domain name
+  // and must not enter prefix matching (e.g. fcbayern.com, fda.gov).
+  if (!h.includes(':')) return false;
   if (h === '::1') return true;
   // ULA fc00::/7
   if (h.startsWith('fc') || h.startsWith('fd')) return true;
