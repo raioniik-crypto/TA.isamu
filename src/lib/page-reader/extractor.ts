@@ -53,7 +53,7 @@ export async function extractPageTitle(url: string): Promise<string> {
  */
 export async function extractPage(url: string): Promise<{ text: string; title: string }> {
   const html = await fetchHtml(url);
-  const text = htmlToText(html);
+  const text = htmlToText(html, url);
 
   if (text.length < 50) {
     throw new PageReadError(
@@ -159,10 +159,14 @@ async function fetchHtml(url: string): Promise<string> {
  * HTMLからテキストを抽出する
  * <article> や <main> があれば優先的に抽出（セマンティック対応）
  */
-function htmlToText(html: string): string {
+function htmlToText(html: string, url?: string): string {
+  // Wikipedia の場合は専用クリーニングを先に適用
+  const isWiki = url ? isWikipediaUrl(url) : false;
+  const cleaned = isWiki ? stripWikipediaElements(html) : html;
+
   // まず<article>または<main>の中身を探す
-  const semanticContent = extractSemanticContent(html);
-  const target = semanticContent || html;
+  const semanticContent = extractSemanticContent(cleaned, url);
+  const target = semanticContent || cleaned;
 
   // 不要タグを除去
   let text = target;
@@ -172,12 +176,10 @@ function htmlToText(html: string): string {
   text = text.replace(/<svg[\s\S]*?<\/svg>/gi, '');
   text = text.replace(/<iframe[\s\S]*?<\/iframe>/gi, '');
 
-  // セマンティックが見つからなかった場合のみナビ系を除去
-  if (!semanticContent) {
-    text = text.replace(/<nav[\s\S]*?<\/nav>/gi, '');
-    text = text.replace(/<aside[\s\S]*?<\/aside>/gi, '');
-    text = text.replace(/<footer[\s\S]*?<\/footer>/gi, '');
-  }
+  // nav/aside/footer はセマンティック有無に関わらず常時除去
+  text = text.replace(/<nav[\s\S]*?<\/nav>/gi, '');
+  text = text.replace(/<aside[\s\S]*?<\/aside>/gi, '');
+  text = text.replace(/<footer[\s\S]*?<\/footer>/gi, '');
 
   // ブロック要素の前後に改行を入れ、段落を保持
   text = text.replace(/<\/?(?:p|div|br|h[1-6]|li|tr|blockquote|section)[^>]*>/gi, '\n');
@@ -219,7 +221,15 @@ function htmlToText(html: string): string {
  * <article>または<main>タグの中身を抽出
  * 記事ページの本文を優先的に取得するため
  */
-function extractSemanticContent(html: string): string | null {
+function extractSemanticContent(html: string, url?: string): string | null {
+  // Wikipedia の場合は #mw-content-text を最優先
+  if (url && isWikipediaUrl(url)) {
+    const mwMatch = html.match(/<div[^>]+id=["']mw-content-text["'][^>]*>([\s\S]*?)<\/div>\s*(?:<\/div>|$)/i);
+    if (mwMatch && mwMatch[1].length > 200) {
+      return mwMatch[1];
+    }
+  }
+
   // <article>を最優先
   const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
   if (articleMatch && articleMatch[1].length > 200) {
@@ -256,4 +266,50 @@ function extractTitleFromHtml(html: string): string {
     .replace(/&#0?39;/g, "'")
     .replace(/&nbsp;/g, ' ')
     .trim();
+}
+
+/**
+ * Wikipedia の URL かどうか判定
+ */
+function isWikipediaUrl(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname;
+    return /(?:^|\.)wikipedia\.org$/i.test(hostname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Wikipedia 固有の非本文 HTML 要素を除去
+ */
+function stripWikipediaElements(html: string): string {
+  let result = html;
+
+  // id ベースの除去
+  const idPatterns = ['toc', 'p-lang', 'catlinks'];
+  for (const id of idPatterns) {
+    result = result.replace(new RegExp(`<[^>]+id=["']${id}["'][^>]*>[\\s\\S]*?<\\/[^>]+>`, 'gi'), '');
+  }
+
+  // class ベースの除去（部分一致）
+  const classPatterns = [
+    'toc',
+    'interlanguage-links',
+    'reflist',
+    'references',
+    'mw-editsection',
+    'navbox',
+    'sisternav',
+    'infobox',
+    'noprint',
+  ];
+  for (const cls of classPatterns) {
+    result = result.replace(
+      new RegExp(`<[^>]+class=["'][^"']*${cls}[^"']*["'][^>]*>[\\s\\S]*?<\\/[^>]+>`, 'gi'),
+      '',
+    );
+  }
+
+  return result;
 }
