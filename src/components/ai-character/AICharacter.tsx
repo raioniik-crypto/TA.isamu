@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from 'react';
 import {
   motion,
   AnimatePresence,
@@ -13,6 +13,7 @@ import { ChatPanel } from '@/components/chat/ChatPanel';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useChatStore } from '@/stores/chat-store';
 import { useViewerStore } from '@/stores/viewer-store';
+import { useReactionStore } from '@/stores/reaction-store';
 import { useHydration } from '@/stores/use-hydration';
 import type { CharacterExpression } from '@/types';
 
@@ -22,6 +23,12 @@ const GREETINGS = [
   '何か気になることはある？',
   '今日も楽しく探検しよう！',
 ];
+
+// ── Page load reaction messages ──
+const PAGE_ARTICLE_MSGS = ['どんな記事かな？', '一緒に読もう！', '気になるね！'];
+const PAGE_YOUTUBE_MSGS = ['動画だ！見てみよう！', '一緒に見よう！', 'どんな動画かな？'];
+/** Minimum interval between page reactions (ms) */
+const PAGE_REACTION_COOLDOWN = 30_000;
 
 function getCharacterSize(): number {
   const w = window.innerWidth;
@@ -98,7 +105,7 @@ function findSnapTarget(
 // Named exports + ssr:false is broken in Next.js 16.
 export default function AICharacter() {
   // ── All hooks must be called unconditionally ──
-  const [isClient, setIsClient] = useState(false);
+  const isClient = useSyncExternalStore(() => () => {}, () => true, () => false);
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [greeting, setGreeting] = useState<string | null>(null);
@@ -112,8 +119,11 @@ export default function AICharacter() {
   const aiName = useSettingsStore((s) => s.aiName);
   const wanderMode = useSettingsStore((s) => s.wanderMode);
   const isSending = useChatStore((s) => s.isSending);
-  const hasContent = useViewerStore((s) => !!s.content);
   const isLoading = useViewerStore((s) => s.isLoading);
+  const viewerContent = useViewerStore((s) => s.content);
+  const reaction = useReactionStore((s) => s.reaction);
+  const clearReaction = useReactionStore((s) => s.clearReaction);
+  const triggerReaction = useReactionStore((s) => s.triggerReaction);
   const displayName = hydrated ? aiName : 'アイモ';
 
   const x = useMotionValue(0);
@@ -122,24 +132,50 @@ export default function AICharacter() {
   const currentAnimation = useRef<{ stop: () => void } | null>(null);
   const isWandering = useRef(true);
   const initialized = useRef(false);
+  const lastReactedUrl = useRef<string | null>(null);
+  const lastPageReactionAt = useRef(0);
+
+  // Auto-clear reaction after 4 seconds
+  useEffect(() => {
+    if (!reaction) return;
+    const timer = setTimeout(clearReaction, 4000);
+    return () => clearTimeout(timer);
+  }, [reaction, clearReaction]);
+
+  // React to new page loads with a short comment
+  useEffect(() => {
+    if (!viewerContent || !isClient || !hydrated) return;
+    // Deduplicate: skip if already reacted to this URL
+    if (viewerContent.url === lastReactedUrl.current) return;
+    lastReactedUrl.current = viewerContent.url;
+    // Cooldown: avoid reacting too frequently
+    const now = Date.now();
+    if (now - lastPageReactionAt.current < PAGE_REACTION_COOLDOWN) return;
+    // Short delay so loading/thinking animation settles first
+    const timer = setTimeout(() => {
+      // Don't interrupt active chat
+      if (useChatStore.getState().isSending) return;
+      lastPageReactionAt.current = Date.now();
+      const msgs =
+        viewerContent.type === 'youtube' ? PAGE_YOUTUBE_MSGS : PAGE_ARTICLE_MSGS;
+      triggerReaction('happy', msgs[Math.floor(Math.random() * msgs.length)]);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [viewerContent, isClient, hydrated, triggerReaction]);
 
   // Derive expression from app state
   const expression: CharacterExpression = (() => {
     if (isSending || isLoading) return 'thinking';
+    if (reaction) return reaction.expression;
     if (greeting) return 'happy';
     return 'neutral';
   })();
-
-  // Mark client-side mount
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   // Initialize size + position (only runs on client after mount)
   useEffect(() => {
     if (!isClient) return;
     const size = getCharacterSize();
-    setCharSize(size);
+    setCharSize(size); // eslint-disable-line react-hooks/set-state-in-effect -- syncs with window dimensions
     const home = getHomePosition();
     x.set(home.x);
     y.set(home.y);
@@ -213,7 +249,7 @@ export default function AICharacter() {
 
       if (!isSitting) {
         const home = getHomePosition();
-        walkTo(home.x, home.y);
+        walkTo(home.x, home.y); // eslint-disable-line react-hooks/set-state-in-effect -- syncs animation with motion values
       }
     } else {
       isWandering.current = true;
@@ -336,8 +372,11 @@ export default function AICharacter() {
         )}
       </AnimatePresence>
 
-      {/* Chat bubble */}
-      <ChatBubble message={greeting} visible={!isOpen && !!greeting} />
+      {/* Chat bubble — reaction messages take priority over greeting */}
+      <ChatBubble
+        message={reaction?.message ?? greeting}
+        visible={!isOpen && !!(reaction?.message || greeting)}
+      />
 
       {/* Character */}
       <CharacterAvatar

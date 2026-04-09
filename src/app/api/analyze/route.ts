@@ -4,9 +4,13 @@ import { buildSystemPrompt } from '@/lib/ai/personality';
 import { buildAnalysisPrompt } from '@/lib/ai/prompts';
 import { extractPageContent, PageReadError } from '@/lib/page-reader/extractor';
 import { pageReadDelta } from '@/lib/growth/engine';
+import { apiGuard } from '@/lib/security/api-guard';
 import type { AnalysisType, GrowthParams } from '@/types';
 
 export async function POST(req: NextRequest) {
+  const blocked = apiGuard(req, { maxRequests: 20 });
+  if (blocked) return blocked;
+
   try {
     const body = await req.json();
     const {

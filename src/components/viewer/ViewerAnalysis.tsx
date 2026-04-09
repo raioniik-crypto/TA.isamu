@@ -8,7 +8,22 @@ import { useViewerStore } from '@/stores/viewer-store';
 import { useWatchingStore } from '@/stores/watching-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { useReactionStore } from '@/stores/reaction-store';
 import { AnalysisResult } from '@/components/page-reader/AnalysisResult';
+
+const REACTION_MESSAGES: Record<AnalysisType, string[]> = {
+  summary: ['なるほど！整理できたね', 'まとめてみたよ！', 'ポイントはここだね！'],
+  simplify: ['わかりやすくしたよ！', 'こう言い換えるとわかりやすいかも', 'シンプルにしてみた！'],
+  caution: ['ここは気をつけたほうがいいかも', 'ちょっと注意が必要かも...', 'うーん、慎重に見てみよう'],
+  perspective: ['別の見方もあるんだね！', '違う角度から見てみると...', 'こういう視点もあるよ！'],
+};
+
+const REACTION_EXPRESSION: Record<AnalysisType, 'happy' | 'surprised'> = {
+  summary: 'happy',
+  simplify: 'happy',
+  caution: 'surprised',
+  perspective: 'surprised',
+};
 
 const ANALYSIS_TYPES: AnalysisType[] = [
   'summary',
@@ -66,6 +81,7 @@ export function ViewerAnalysis() {
   const watchingSession = useWatchingStore((s) => s.session);
 
   const aiName = useSettingsStore((s) => s.aiName);
+  const triggerReaction = useReactionStore((s) => s.triggerReaction);
   const params = useAIProfileStore((s) => s.params);
   const applyGrowth = useAIProfileStore((s) => s.applyGrowth);
   const incrementInteractions = useAIProfileStore((s) => s.incrementInteractions);
@@ -128,6 +144,11 @@ export function ViewerAnalysis() {
         applyGrowth(data.growthDelta);
       }
       incrementInteractions();
+
+      // Trigger character reaction
+      const messages = REACTION_MESSAGES[selectedType];
+      const msg = messages[Math.floor(Math.random() * messages.length)];
+      triggerReaction(REACTION_EXPRESSION[selectedType], msg);
     } catch (e) {
       setError(
         e instanceof Error

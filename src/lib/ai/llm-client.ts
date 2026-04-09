@@ -26,8 +26,10 @@ async function callOpenAI(req: LLMRequest): Promise<LLMResponse> {
   });
 
   if (!res.ok) {
+    // ログにはレスポンスボディを含めるが、Error メッセージには含めない（クライアントへの漏洩防止）
     const body = await res.text();
-    throw new Error(`OpenAI API error ${res.status}: ${body}`);
+    console.error(`OpenAI API error ${res.status}:`, body);
+    throw new Error(`OpenAI API error (status ${res.status})`);
   }
 
   const data = await res.json();
@@ -71,7 +73,8 @@ async function callAnthropic(req: LLMRequest): Promise<LLMResponse> {
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Anthropic API error ${res.status}: ${body}`);
+    console.error(`Anthropic API error ${res.status}:`, body);
+    throw new Error(`Anthropic API error (status ${res.status})`);
   }
 
   const data = await res.json();
