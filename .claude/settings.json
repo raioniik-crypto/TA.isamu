@@ -29,5 +29,27 @@
       "Bash(git reset --hard*)",
       "Bash(git clean -f*)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "write|edit|create",
+        "command": "npx prettier --write \"$CLAUDE_FILE_PATH\" 2>/dev/null || true",
+        "description": "自動フォーマット"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "bash",
+        "command": "echo \"$CLAUDE_TOOL_INPUT\" | grep -qE '(rm -rf /|git push.*--force.*main|drop database)' && echo 'BLOCK: 危険コマンド検出' && exit 1 || exit 0",
+        "description": "破壊的操作ブロック"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "npm run build 2>&1 | tail -20; echo \"EXIT_CODE: $?\"",
+        "description": "タスク完了前ビルド検証"
+      }
+    ]
   }
 }
