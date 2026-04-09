@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ContentViewer } from '@/components/viewer/ContentViewer';
 import { VideoQA } from '@/components/viewer/VideoQA';
@@ -20,16 +21,19 @@ export default function HomePage() {
   const params = useAIProfileStore((s) => s.params);
   const totalInteractions = useAIProfileStore((s) => s.totalInteractions);
 
+  const [isTheater, setIsTheater] = useState(false);
+
   const displayParams = hydrated ? params : DEFAULT_GROWTH_PARAMS;
   const displayName = hydrated ? aiName : 'アイモ';
   const displayCount = hydrated ? totalInteractions : 0;
   const personality = derivePersonality(displayParams);
 
   const hasContent = !!content;
+  const isYouTube = content?.type === 'youtube';
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24">
-      {/* エラー表示 */}
+      {/* Error display */}
       <AnimatePresence>
         {error && (
           <motion.div
@@ -40,13 +44,15 @@ export default function HomePage() {
           >
             <div className="flex items-start gap-2.5">
               <span className="mt-0.5 text-sm shrink-0">😥</span>
-              <p className="text-[13px] text-foreground leading-relaxed">{error}</p>
+              <p className="text-[13px] text-foreground leading-relaxed">
+                {error}
+              </p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 未閲覧時 → ブラウザホーム */}
+      {/* Home */}
       {!hasContent && (
         <BrowserHome
           displayName={displayName}
@@ -55,20 +61,39 @@ export default function HomePage() {
         />
       )}
 
-      {/* 閲覧時 → コンテンツ + 解析パネル */}
+      {/* Content view */}
       {hasContent && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="mt-4 space-y-4"
         >
-          <ContentViewer />
-
-          {/* 解析パネル: モバイル縦積み / デスクトップ横並び */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <VideoQA />
-            <ViewerAnalysis />
-          </div>
+          {/* Theater layout: video + QA side by side */}
+          {isTheater && isYouTube ? (
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
+                <ContentViewer
+                  isTheater
+                  onToggleTheater={() => setIsTheater(false)}
+                />
+                <VideoQA />
+              </div>
+              <ViewerAnalysis />
+            </>
+          ) : (
+            <>
+              <ContentViewer
+                isTheater={false}
+                onToggleTheater={
+                  isYouTube ? () => setIsTheater(true) : undefined
+                }
+              />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <VideoQA />
+                <ViewerAnalysis />
+              </div>
+            </>
+          )}
         </motion.div>
       )}
     </div>

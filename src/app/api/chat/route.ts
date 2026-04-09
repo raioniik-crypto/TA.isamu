@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { callLLM } from '@/lib/ai/llm-client';
 import { buildSystemPrompt } from '@/lib/ai/personality';
 import { calculateGrowthDelta } from '@/lib/growth/engine';
+import { apiGuard } from '@/lib/security/api-guard';
 import type { GrowthParams } from '@/types';
 
 export async function POST(req: NextRequest) {
+  const blocked = apiGuard(req, { maxRequests: 30 });
+  if (blocked) return blocked;
+
   try {
     const body = await req.json();
     const {

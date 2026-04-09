@@ -8,7 +8,16 @@ import { useViewerStore } from '@/stores/viewer-store';
 import { useWatchingStore } from '@/stores/watching-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { useReactionStore } from '@/stores/reaction-store';
+import { pickReactionMessage } from '@/lib/reaction-messages';
 import { AnalysisResult } from '@/components/page-reader/AnalysisResult';
+
+const REACTION_EXPRESSION: Record<AnalysisType, 'happy' | 'surprised'> = {
+  summary: 'happy',
+  simplify: 'happy',
+  caution: 'surprised',
+  perspective: 'surprised',
+};
 
 const ANALYSIS_TYPES: AnalysisType[] = [
   'summary',
@@ -66,6 +75,7 @@ export function ViewerAnalysis() {
   const watchingSession = useWatchingStore((s) => s.session);
 
   const aiName = useSettingsStore((s) => s.aiName);
+  const triggerReaction = useReactionStore((s) => s.triggerReaction);
   const params = useAIProfileStore((s) => s.params);
   const applyGrowth = useAIProfileStore((s) => s.applyGrowth);
   const incrementInteractions = useAIProfileStore((s) => s.incrementInteractions);
@@ -128,6 +138,10 @@ export function ViewerAnalysis() {
         applyGrowth(data.growthDelta);
       }
       incrementInteractions();
+
+      // Trigger character reaction (personality-aware)
+      const msg = pickReactionMessage(`analysis-${selectedType}`, params);
+      triggerReaction(REACTION_EXPRESSION[selectedType], msg);
     } catch (e) {
       setError(
         e instanceof Error
@@ -182,6 +196,7 @@ export function ViewerAnalysis() {
     <div className="space-y-3">
       {/* 解析コントロール */}
       <div
+        data-snap-target
         className="rounded-2xl border border-border bg-surface p-4"
         style={{ boxShadow: 'var(--shadow-sm)' }}
       >
@@ -245,6 +260,11 @@ export function ViewerAnalysis() {
             <p className="mb-3 text-[13px] font-medium text-muted">
               AIにこのページを解析してもらう
             </p>
+            {!result && (
+              <p className="mb-3 text-[12px] text-muted/70 leading-relaxed">
+                要約・言い換え・注意点・別の視点から解析できます。ボタンを選んで「解析する」を押してください。
+              </p>
+            )}
             {analysisControls}
           </>
         )}

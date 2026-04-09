@@ -125,6 +125,7 @@ export function VideoQA() {
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
+      data-snap-target
       className="rounded-2xl border border-border bg-surface overflow-hidden"
       style={{ boxShadow: 'var(--shadow-sm)' }}
     >
@@ -192,6 +193,13 @@ export function VideoQA() {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Onboarding hint */}
+            {session!.messages.length === 0 && (
+              <p className="text-[12px] text-muted/70 leading-relaxed px-1">
+                動画の内容について自由に質問できます。「この動画のポイントは？」「○○について詳しく教えて」など。
+              </p>
             )}
 
             {/* 質問入力 */}

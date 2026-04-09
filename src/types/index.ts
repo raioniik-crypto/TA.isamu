@@ -87,17 +87,22 @@ export interface GrowthLog {
   createdAt: string;
 }
 
+/** キャラクター表情 */
+export type CharacterExpression = 'neutral' | 'happy' | 'thinking' | 'surprised';
+
 /** アプリ設定 */
 export interface AppSettings {
   aiName: string;
   theme: 'light' | 'dark';
   privacyAcknowledged: boolean;
+  wanderMode: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
   aiName: 'アイモ',
   theme: 'light',
   privacyAcknowledged: false,
+  wanderMode: true,
 };
 
 /** LLMプロバイダー */

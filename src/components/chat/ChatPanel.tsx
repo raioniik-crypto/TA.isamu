@@ -4,9 +4,26 @@ import { useCallback } from 'react';
 import { useChatStore } from '@/stores/chat-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useSettingsStore } from '@/stores/settings-store';
+import { useReactionStore } from '@/stores/reaction-store';
+import { pickReactionMessage } from '@/lib/reaction-messages';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import type { GrowthDelta } from '@/types';
+
+// ── Chat emotion detection ─────────────────────────────────
+const HAPPY_PATTERN =
+  /楽し|嬉し|うれし|すごい|いいね|面白|素敵|わくわく|よかった|がんば|応援/;
+const SURPRISED_PATTERN =
+  /びっくり|驚|意外|知らなかった|気をつけ|注意/;
+
+/** Detect emotion from the assistant response text. Returns null most of the time to stay subtle. */
+function detectChatEmotion(
+  text: string,
+): 'happy' | 'surprised' | null {
+  if (SURPRISED_PATTERN.test(text) && Math.random() < 0.7) return 'surprised';
+  if (HAPPY_PATTERN.test(text) && Math.random() < 0.5) return 'happy';
+  return null;
+}
 
 interface ChatPanelProps {
   onClose: () => void;
@@ -27,6 +44,7 @@ export function ChatPanel({ onClose, onMinimize }: ChatPanelProps) {
   const messages = conversation?.messages ?? [];
 
   const aiName = useSettingsStore((s) => s.aiName);
+  const triggerReaction = useReactionStore((s) => s.triggerReaction);
   const params = useAIProfileStore((s) => s.params);
   const applyGrowth = useAIProfileStore((s) => s.applyGrowth);
   const incrementInteractions = useAIProfileStore((s) => s.incrementInteractions);
@@ -73,6 +91,13 @@ export function ChatPanel({ onClose, onMinimize }: ChatPanelProps) {
           applyGrowth(data.growthDelta);
         }
         incrementInteractions();
+
+        // Trigger character emotion based on response content (personality-aware)
+        const emotion = detectChatEmotion(data.content);
+        if (emotion) {
+          const ctx = emotion === 'happy' ? 'chat-happy' : 'chat-surprised';
+          triggerReaction(emotion, pickReactionMessage(ctx, params));
+        }
       } catch {
         addMessage(convId, {
           role: 'assistant',
@@ -88,6 +113,7 @@ export function ChatPanel({ onClose, onMinimize }: ChatPanelProps) {
       addMessage,
       setIsSending,
       aiName,
+      triggerReaction,
       params,
       applyGrowth,
       incrementInteractions,

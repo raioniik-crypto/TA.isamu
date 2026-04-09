@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractPage, PageReadError } from '@/lib/page-reader/extractor';
 import { fetchTranscript } from '@/lib/youtube/transcript';
+import { apiGuard } from '@/lib/security/api-guard';
 
 export async function POST(req: NextRequest) {
+  const blocked = apiGuard(req, { maxRequests: 20 });
+  if (blocked) return blocked;
+
   try {
     const { url }: { url: string } = await req.json();
 
