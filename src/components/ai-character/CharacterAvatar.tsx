@@ -7,17 +7,17 @@ import type { CharacterExpression } from '@/types';
 
 /** All sprite paths for browser preloading. */
 const ALL_SPRITES = [
-  '/sprites/phil-default.webp',
-  '/sprites/phil-idle-1.webp',
-  '/sprites/phil-idle-2.webp',
-  '/sprites/phil-blink-1.webp',
-  '/sprites/phil-blink-2.webp',
-  '/sprites/phil-walk-1.webp',
-  '/sprites/phil-walk-2.webp',
-  '/sprites/phil-walk-3.webp',
-  '/sprites/phil-walk-4.webp',
-  '/sprites/phil-surprised.webp',
-  '/sprites/phil-sit.webp',
+  '/sprites/phil-default.png',
+  '/sprites/phil-idle-1.png',
+  '/sprites/phil-idle-2.png',
+  '/sprites/phil-blink-1.png',
+  '/sprites/phil-blink-2.png',
+  '/sprites/phil-walk-1.png',
+  '/sprites/phil-walk-2.png',
+  '/sprites/phil-walk-3.png',
+  '/sprites/phil-walk-4.png',
+  '/sprites/phil-surprised.png',
+  '/sprites/phil-sit.png',
 ];
 
 interface CharacterAvatarProps {
@@ -72,11 +72,9 @@ export function CharacterAvatar({
     if (isThinking) {
       return { y: [0, -4, 4, 0], rotate: [0, -2, 2, 0] };
     }
-    // Idle: subtle breathing with gentle head sway
+    // Idle: very subtle breathing only — no rotation sway
     return {
-      scaleY: [1, 1.005, 1],
-      scaleX: [1, 0.995, 1],
-      rotate: [0, -0.8, 0, 0.8, 0],
+      scaleY: [1, 1.003, 1],
     };
   };
 
@@ -91,7 +89,7 @@ export function CharacterAvatar({
       return { repeat: Infinity, duration: 1.4, ease: 'easeInOut' as const };
     }
     // Idle breathing cycle — slow and natural
-    return { repeat: Infinity, duration: 5, ease: 'easeInOut' as const };
+    return { repeat: Infinity, duration: 6, ease: 'easeInOut' as const };
   };
 
   return (
