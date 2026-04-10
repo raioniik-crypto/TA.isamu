@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ContentViewer } from '@/components/viewer/ContentViewer';
 import { ViewerAnalysis } from '@/components/viewer/ViewerAnalysis';
 import { CompanionViewer } from '@/components/ai-character/CompanionViewer';
 import { HomeCompanionCard } from '@/components/home/HomeCompanionCard';
@@ -11,8 +9,6 @@ import { useViewerStore } from '@/stores/viewer-store';
 export default function HomePage() {
   const content = useViewerStore((s) => s.content);
   const error = useViewerStore((s) => s.error);
-
-  const [isTheater, setIsTheater] = useState(false);
 
   const hasContent = !!content;
   const isYouTube = content?.type === 'youtube';
@@ -38,32 +34,24 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      {/* Home: character + bubble + input */}
+      {/* Home: character + bubble + input + sample URL cards */}
       {!hasContent && <HomeCompanionCard />}
 
-      {/* Content view */}
+      {/* Content view — ContentViewer itself is rendered by PersistentViewer
+          at the providers level so the iframe persists across route changes.
+          Here we only render the "below content" UI. */}
       {hasContent && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="mt-4 space-y-4"
         >
-          {/* YouTube: companion watching layout */}
           {isYouTube ? (
-            <>
-              <ContentViewer
-                isTheater={isTheater}
-                onToggleTheater={() => setIsTheater(!isTheater)}
-              />
-              <CompanionViewer />
-            </>
+            <CompanionViewer />
           ) : (
-            <>
-              <ContentViewer isTheater={false} />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <ViewerAnalysis />
-              </div>
-            </>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ViewerAnalysis />
+            </div>
           )}
         </motion.div>
       )}
