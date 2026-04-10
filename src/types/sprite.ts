@@ -26,7 +26,7 @@ export const SPRITE_FPS: Record<SpriteState, number> = {
 
 /** Metadata for a single sprite frame. */
 export interface SpriteFrame {
-  /** Image path relative to /public, e.g. "/sprites/phil-idle-0.png" */
+  /** Image path relative to /public, e.g. "/sprites/phil-idle-1.webp" */
   src: string;
   /** Frame index within the state animation (0-based). */
   index: number;
