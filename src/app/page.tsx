@@ -5,28 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ContentViewer } from '@/components/viewer/ContentViewer';
 import { ViewerAnalysis } from '@/components/viewer/ViewerAnalysis';
 import { CompanionViewer } from '@/components/ai-character/CompanionViewer';
-import { BrowserHome } from '@/components/browser/BrowserHome';
+import { HomeCompanionCard } from '@/components/home/HomeCompanionCard';
 import { useViewerStore } from '@/stores/viewer-store';
-import { useSettingsStore } from '@/stores/settings-store';
-import { useAIProfileStore } from '@/stores/ai-profile-store';
-import { useHydration } from '@/stores/use-hydration';
-import { derivePersonality } from '@/lib/ai/personality';
-import { DEFAULT_GROWTH_PARAMS } from '@/types';
 
 export default function HomePage() {
-  const hydrated = useHydration();
   const content = useViewerStore((s) => s.content);
   const error = useViewerStore((s) => s.error);
-  const aiName = useSettingsStore((s) => s.aiName);
-  const params = useAIProfileStore((s) => s.params);
-  const totalInteractions = useAIProfileStore((s) => s.totalInteractions);
 
   const [isTheater, setIsTheater] = useState(false);
-
-  const displayParams = hydrated ? params : DEFAULT_GROWTH_PARAMS;
-  const displayName = hydrated ? aiName : 'アイモ';
-  const displayCount = hydrated ? totalInteractions : 0;
-  const personality = derivePersonality(displayParams);
 
   const hasContent = !!content;
   const isYouTube = content?.type === 'youtube';
@@ -52,14 +38,8 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      {/* Home */}
-      {!hasContent && (
-        <BrowserHome
-          displayName={displayName}
-          displayCount={displayCount}
-          personality={personality}
-        />
-      )}
+      {/* Home: character + bubble + input */}
+      {!hasContent && <HomeCompanionCard />}
 
       {/* Content view */}
       {hasContent && (

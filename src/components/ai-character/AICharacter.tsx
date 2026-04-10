@@ -17,6 +17,7 @@ import { useReactionStore } from '@/stores/reaction-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useHydration } from '@/stores/use-hydration';
 import { pickReactionMessage } from '@/lib/reaction-messages';
+import { usePathname } from 'next/navigation';
 import type { CharacterExpression } from '@/types';
 
 /** Minimum interval between page reactions (ms) */
@@ -98,6 +99,7 @@ function findSnapTarget(
 export default function AICharacter() {
   // ── All hooks must be called unconditionally ──
   const isClient = useSyncExternalStore(() => () => {}, () => true, () => false);
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -276,6 +278,9 @@ export default function AICharacter() {
 
   // Hide floating character when YouTube companion viewer is active
   if (viewerContent?.type === 'youtube') return null;
+
+  // Hide on home when no content loaded (HomeCompanionCard takes over)
+  if (pathname === '/' && !viewerContent) return null;
 
   if (isMinimized) {
     return (
