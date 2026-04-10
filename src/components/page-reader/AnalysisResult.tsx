@@ -55,7 +55,7 @@ export function AnalysisResult({
         {url}
       </p>
 
-      <div className="rounded-xl bg-background p-4 text-[15px] leading-[1.8] text-foreground whitespace-pre-wrap">
+      <div className="rounded-xl bg-background p-4 text-[15px] leading-[1.6] text-foreground whitespace-pre-wrap">
         {content}
       </div>
     </motion.div>

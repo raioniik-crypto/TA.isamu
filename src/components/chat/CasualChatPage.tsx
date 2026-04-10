@@ -1,36 +1,31 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useChatStore } from '@/stores/chat-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useReactionStore } from '@/stores/reaction-store';
+import { useHydration } from '@/stores/use-hydration';
 import { pickReactionMessage } from '@/lib/reaction-messages';
-import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import type { GrowthDelta } from '@/types';
 
-// ── Chat emotion detection ─────────────────────────────────
 const HAPPY_PATTERN =
   /楽し|嬉し|うれし|すごい|いいね|面白|素敵|わくわく|よかった|がんば|応援/;
 const SURPRISED_PATTERN =
   /びっくり|驚|意外|知らなかった|気をつけ|注意/;
 
-/** Detect emotion from the assistant response text. Returns null most of the time to stay subtle. */
-function detectChatEmotion(
-  text: string,
-): 'happy' | 'surprised' | null {
+function detectChatEmotion(text: string): 'happy' | 'surprised' | null {
   if (SURPRISED_PATTERN.test(text) && Math.random() < 0.7) return 'surprised';
   if (HAPPY_PATTERN.test(text) && Math.random() < 0.5) return 'happy';
   return null;
 }
 
-interface ChatPanelProps {
-  onClose: () => void;
-  onMinimize: () => void;
-}
+export function CasualChatPage() {
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const hydrated = useHydration();
 
-export function ChatPanel({ onClose, onMinimize }: ChatPanelProps) {
   const {
     currentConversationId,
     startConversation,
@@ -48,6 +43,14 @@ export function ChatPanel({ onClose, onMinimize }: ChatPanelProps) {
   const params = useAIProfileStore((s) => s.params);
   const applyGrowth = useAIProfileStore((s) => s.applyGrowth);
   const incrementInteractions = useAIProfileStore((s) => s.incrementInteractions);
+
+  const displayName = hydrated ? aiName : 'アイモ';
+
+  // Auto-scroll on new messages
+  const messageCount = messages.length;
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messageCount]);
 
   const handleSend = useCallback(
     async (content: string) => {
@@ -92,7 +95,6 @@ export function ChatPanel({ onClose, onMinimize }: ChatPanelProps) {
         }
         incrementInteractions();
 
-        // Trigger character emotion based on response content (personality-aware)
         const emotion = detectChatEmotion(data.content);
         if (emotion) {
           const ctx = emotion === 'happy' ? 'chat-happy' : 'chat-surprised';
@@ -121,51 +123,65 @@ export function ChatPanel({ onClose, onMinimize }: ChatPanelProps) {
   );
 
   return (
-    <div
-      className="flex flex-col rounded-2xl border border-border bg-surface overflow-hidden"
-      style={{ height: 'min(520px, calc(100dvh - 120px))', boxShadow: 'var(--shadow-chat)' }}
-    >
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3.5">
-        <div className="flex items-center gap-2.5">
-          <div className="relative">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary-light to-primary flex items-center justify-center text-white text-xs font-bold">
-              {aiName.charAt(0)}
-            </div>
-            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-success border-2 border-surface" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-foreground leading-tight">{aiName}</h3>
-            <p className="text-[11px] text-muted leading-tight">オンライン</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-0.5">
-          <button
-            onClick={onMinimize}
-            className="rounded-lg p-2 text-muted hover:bg-surface-hover hover:text-foreground transition-colors"
-            aria-label="最小化"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M5 12h14" />
-            </svg>
-          </button>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-muted hover:bg-surface-hover hover:text-foreground transition-colors"
-            aria-label="閉じる"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+    <div className="mx-auto flex max-w-2xl flex-col px-4" style={{ height: 'calc(100dvh - 120px)' }}>
+      {/* Header */}
+      <div className="shrink-0 py-3 text-center">
+        <h2 className="text-[13px] font-semibold text-muted">
+          {displayName} とおしゃべり
+        </h2>
       </div>
 
-      {/* メッセージ */}
-      <MessageList messages={messages} />
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto py-4 space-y-3">
+        {messages.length === 0 ? (
+          <div className="flex flex-1 items-center justify-center py-16 text-center">
+            <div>
+              <p className="text-sm font-medium text-foreground mb-1">
+                {displayName}とおしゃべりしよう
+              </p>
+              <p className="text-[13px] text-muted leading-relaxed">
+                なんでも気軽に話してみてね
+              </p>
+            </div>
+          </div>
+        ) : (
+          messages.map((msg, i) => (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i === messages.length - 1 ? 0.1 : 0, duration: 0.2 }}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`whitespace-pre-wrap text-[15px] leading-[1.7] ${
+                  msg.role === 'user'
+                    ? 'max-w-[75%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-white'
+                    : 'max-w-[80%] rounded-2xl rounded-bl-md border border-[var(--chat-ai-border)] bg-chat-ai px-4 py-3 text-foreground'
+                }`}
+              >
+                <p>{msg.content}</p>
+                <span
+                  className={`mt-1 block text-right text-[11px] ${
+                    msg.role === 'user' ? 'text-white/60' : 'text-muted'
+                  }`}
+                >
+                  {new Date(msg.createdAt).toLocaleTimeString('ja-JP', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </div>
+            </motion.div>
+          ))
+        )}
+        <div ref={bottomRef} />
+      </div>
 
-      {/* 入力 */}
-      <ChatInput onSend={handleSend} disabled={isSending} />
+      {/* Input */}
+      <div className="shrink-0">
+        <ChatInput onSend={handleSend} disabled={isSending} />
+      </div>
     </div>
   );
 }

@@ -9,33 +9,26 @@ import {
 } from 'framer-motion';
 import { CharacterAvatar } from './CharacterAvatar';
 import { ChatBubble } from './ChatBubble';
-import { ChatPanel } from '@/components/chat/ChatPanel';
+import CompactChat from '@/components/chat/CompactChat';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useChatStore } from '@/stores/chat-store';
 import { useViewerStore } from '@/stores/viewer-store';
 import { useReactionStore } from '@/stores/reaction-store';
+import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useHydration } from '@/stores/use-hydration';
+import { pickReactionMessage } from '@/lib/reaction-messages';
+import { usePathname } from 'next/navigation';
 import type { CharacterExpression } from '@/types';
 
-const GREETINGS = [
-  'やあ！今日はなにを調べようか？',
-  'こんにちは！一緒に学ぼう！',
-  '何か気になることはある？',
-  '今日も楽しく探検しよう！',
-];
-
-// ── Page load reaction messages ──
-const PAGE_ARTICLE_MSGS = ['どんな記事かな？', '一緒に読もう！', '気になるね！'];
-const PAGE_YOUTUBE_MSGS = ['動画だ！見てみよう！', '一緒に見よう！', 'どんな動画かな？'];
 /** Minimum interval between page reactions (ms) */
 const PAGE_REACTION_COOLDOWN = 30_000;
 
 function getCharacterSize(): number {
   const w = window.innerWidth;
-  if (w >= 1280) return 200;
-  if (w >= 1024) return 160;
-  if (w >= 768) return 130;
-  return 90;
+  if (w >= 1280) return 300;
+  if (w >= 1024) return 240;
+  if (w >= 768) return 195;
+  return 135;
 }
 
 function getHomePosition(): { x: number; y: number } {
@@ -106,7 +99,9 @@ function findSnapTarget(
 export default function AICharacter() {
   // ── All hooks must be called unconditionally ──
   const isClient = useSyncExternalStore(() => () => {}, () => true, () => false);
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [greeting, setGreeting] = useState<string | null>(null);
   const [charSize, setCharSize] = useState(100);
@@ -156,9 +151,9 @@ export default function AICharacter() {
       // Don't interrupt active chat
       if (useChatStore.getState().isSending) return;
       lastPageReactionAt.current = Date.now();
-      const msgs =
-        viewerContent.type === 'youtube' ? PAGE_YOUTUBE_MSGS : PAGE_ARTICLE_MSGS;
-      triggerReaction('happy', msgs[Math.floor(Math.random() * msgs.length)]);
+      const ctx = viewerContent.type === 'youtube' ? 'page-youtube' : 'page-article';
+      const currentParams = useAIProfileStore.getState().params;
+      triggerReaction('happy', pickReactionMessage(ctx, currentParams));
     }, 800);
     return () => clearTimeout(timer);
   }, [viewerContent, isClient, hydrated, triggerReaction]);
@@ -262,12 +257,12 @@ export default function AICharacter() {
     };
   }, [isClient, hydrated, isOpen, isMinimized, wanderMode, startWandering, walkTo, isSitting]);
 
-  // Greeting
+  // Greeting (personality-aware)
   useEffect(() => {
     if (!isClient || !hydrated) return;
     const timer = setTimeout(() => {
-      const msg = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
-      setGreeting(msg);
+      const currentParams = useAIProfileStore.getState().params;
+      setGreeting(pickReactionMessage('greeting', currentParams));
     }, 1500);
     const hideTimer = setTimeout(() => setGreeting(null), 6000);
     return () => {
@@ -276,10 +271,16 @@ export default function AICharacter() {
     };
   }, [isClient, hydrated]);
 
-  // drag is only enabled after hydration so SSR and client initial render match
-  const canDrag = hydrated && isDesktop();
+  // drag is enabled on all devices after hydration
+  const canDrag = hydrated;
 
   if (!isClient) return null;
+
+  // Hide floating character when YouTube companion viewer is active
+  if (viewerContent?.type === 'youtube') return null;
+
+  // Hide on home when no content loaded (HomeCompanionCard takes over)
+  if (pathname === '/' && !viewerContent) return null;
 
   if (isMinimized) {
     return (
@@ -350,7 +351,7 @@ export default function AICharacter() {
         }, 5000);
       }}
     >
-      {/* Chat panel */}
+      {/* Compact chat */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -358,21 +359,22 @@ export default function AICharacter() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="absolute right-0 w-[calc(100vw-2.5rem)] max-w-[400px]"
-            style={{ bottom: charH + 16 }}
+            className="absolute right-0"
+            style={{ bottom: charH + 12 }}
           >
-            <ChatPanel
-              onClose={() => setIsOpen(false)}
-              onMinimize={() => {
+            <CompactChat
+              expanded={expanded}
+              onToggleExpand={() => setExpanded((v) => !v)}
+              onClose={() => {
                 setIsOpen(false);
-                setIsMinimized(true);
+                setExpanded(false);
               }}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Chat bubble — reaction messages take priority over greeting */}
+      {/* Chat bubble — only when CompactChat is closed */}
       <ChatBubble
         message={reaction?.message ?? greeting}
         visible={!isOpen && !!(reaction?.message || greeting)}
@@ -388,7 +390,12 @@ export default function AICharacter() {
         facingLeft={facingLeft}
         onClick={() => {
           if (isDragging) return;
-          setIsOpen(!isOpen);
+          if (isOpen) {
+            setIsOpen(false);
+            setExpanded(false);
+          } else {
+            setIsOpen(true);
+          }
           setGreeting(null);
         }}
       />

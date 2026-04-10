@@ -1,0 +1,55 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(npm run lint)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run build)",
+      "Bash(npm run dev)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(git checkout*)",
+      "Bash(git branch*)",
+      "Bash(git fetch*)",
+      "Bash(git pull*)",
+      "Bash(git merge*)",
+      "Bash(ls*)",
+      "Bash(mkdir*)",
+      "Bash(cat package.json)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "write|edit|create",
+        "command": "npx prettier --write \"$CLAUDE_FILE_PATH\" 2>/dev/null || true",
+        "description": "自動フォーマット"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "bash",
+        "command": "echo \"$CLAUDE_TOOL_INPUT\" | grep -qE '(rm -rf /|git push.*--force.*main|drop database)' && echo 'BLOCK: 危険コマンド検出' && exit 1 || exit 0",
+        "description": "破壊的操作ブロック"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "npm run typecheck > /tmp/claude_typecheck.log 2>&1; tc=$?; npm run build > /tmp/claude_build.log 2>&1; bc=$?; echo '=== typecheck ==='; tail -10 /tmp/claude_typecheck.log; echo \"TYPECHECK_EXIT: $tc\"; echo '=== build ==='; tail -20 /tmp/claude_build.log; echo \"BUILD_EXIT: $bc\"; [ $tc -eq 0 ] && [ $bc -eq 0 ] || exit 1",
+        "description": "タスク完了前にtypecheck+build検証（終了コードを正確に捕捉）"
+      }
+    ]
+  }
+}

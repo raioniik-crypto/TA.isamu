@@ -9,14 +9,8 @@ import { useWatchingStore } from '@/stores/watching-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useReactionStore } from '@/stores/reaction-store';
+import { pickReactionMessage } from '@/lib/reaction-messages';
 import { AnalysisResult } from '@/components/page-reader/AnalysisResult';
-
-const REACTION_MESSAGES: Record<AnalysisType, string[]> = {
-  summary: ['なるほど！整理できたね', 'まとめてみたよ！', 'ポイントはここだね！'],
-  simplify: ['わかりやすくしたよ！', 'こう言い換えるとわかりやすいかも', 'シンプルにしてみた！'],
-  caution: ['ここは気をつけたほうがいいかも', 'ちょっと注意が必要かも...', 'うーん、慎重に見てみよう'],
-  perspective: ['別の見方もあるんだね！', '違う角度から見てみると...', 'こういう視点もあるよ！'],
-};
 
 const REACTION_EXPRESSION: Record<AnalysisType, 'happy' | 'surprised'> = {
   summary: 'happy',
@@ -145,9 +139,8 @@ export function ViewerAnalysis() {
       }
       incrementInteractions();
 
-      // Trigger character reaction
-      const messages = REACTION_MESSAGES[selectedType];
-      const msg = messages[Math.floor(Math.random() * messages.length)];
+      // Trigger character reaction (personality-aware)
+      const msg = pickReactionMessage(`analysis-${selectedType}`, params);
       triggerReaction(REACTION_EXPRESSION[selectedType], msg);
     } catch (e) {
       setError(

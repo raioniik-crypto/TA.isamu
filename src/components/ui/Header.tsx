@@ -9,6 +9,7 @@ import { BrowserBar } from '@/components/browser/BrowserBar';
 
 const NAV_ITEMS = [
   { href: '/', label: 'ホーム' },
+  { href: '/chat', label: '雑談' },
   { href: '/diary', label: '日記' },
   { href: '/profile', label: 'AI情報' },
   { href: '/settings', label: '設定' },
