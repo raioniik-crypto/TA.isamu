@@ -1,9 +1,24 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
+import { useSpriteAnimation, useSpriteStateSync } from '@/lib/use-sprite-animation';
 import type { CharacterExpression } from '@/types';
+
+/** All sprite paths for browser preloading. */
+const ALL_SPRITES = [
+  '/sprites/phil-default.webp',
+  '/sprites/phil-idle-1.webp',
+  '/sprites/phil-idle-2.webp',
+  '/sprites/phil-blink-1.webp',
+  '/sprites/phil-blink-2.webp',
+  '/sprites/phil-walk-1.webp',
+  '/sprites/phil-walk-2.webp',
+  '/sprites/phil-walk-3.webp',
+  '/sprites/phil-walk-4.webp',
+  '/sprites/phil-surprised.webp',
+  '/sprites/phil-sit.webp',
+];
 
 interface CharacterAvatarProps {
   size?: number;
@@ -26,39 +41,23 @@ export function CharacterAvatar({
 }: CharacterAvatarProps) {
   const h = Math.round(size * 1.4);
 
-  // ── Idle glance reaction: periodically trigger a "looking around" motion ──
-  const [isGlancing, setIsGlancing] = useState(false);
+  // Bridge component props → sprite store
+  useSpriteStateSync({
+    isWalking,
+    isSitting,
+    isSurprised: expression === 'surprised',
+  });
 
-  const scheduleGlance = useCallback(() => {
-    const delay = 12_000 + Math.random() * 6_000; // 12–18s
-    return setTimeout(() => setIsGlancing(true), delay);
+  // Drive sprite animation loop and get current image path
+  const currentSprite = useSpriteAnimation();
+
+  // Preload all sprite images on mount to prevent flicker
+  useEffect(() => {
+    ALL_SPRITES.forEach((src) => {
+      const img = new window.Image();
+      img.src = src;
+    });
   }, []);
-
-  useEffect(() => {
-    // Only glance when truly idle (not walking, sitting, or thinking)
-    if (isWalking || isSitting || isThinking) {
-      setIsGlancing(false); // eslint-disable-line react-hooks/set-state-in-effect -- resets flag when no longer idle
-      return;
-    }
-    const timer = scheduleGlance();
-    return () => clearTimeout(timer);
-  }, [isWalking, isSitting, isThinking, scheduleGlance]);
-
-  // Reset glance flag after animation completes, then schedule next
-  useEffect(() => {
-    if (!isGlancing) return;
-    const reset = setTimeout(() => {
-      setIsGlancing(false);
-    }, 1800); // matches glance animation duration
-    return () => clearTimeout(reset);
-  }, [isGlancing]);
-
-  // Schedule next glance after previous one ends
-  useEffect(() => {
-    if (isGlancing || isWalking || isSitting || isThinking) return;
-    const timer = scheduleGlance();
-    return () => clearTimeout(timer);
-  }, [isGlancing, isWalking, isSitting, isThinking, scheduleGlance]);
 
   const getAnimation = () => {
     if (isSitting) {
@@ -72,13 +71,6 @@ export function CharacterAvatar({
     }
     if (isThinking) {
       return { y: [0, -4, 4, 0], rotate: [0, -2, 2, 0] };
-    }
-    if (isGlancing) {
-      // Quick "looking around" tilt — larger than idle breathing
-      return {
-        rotate: [0, 3, -2.5, 0.5, 0],
-        scaleY: [1, 1.01, 1, 1.005, 1],
-      };
     }
     // Idle: subtle breathing with gentle head sway
     return {
@@ -97,9 +89,6 @@ export function CharacterAvatar({
     }
     if (isThinking) {
       return { repeat: Infinity, duration: 1.4, ease: 'easeInOut' as const };
-    }
-    if (isGlancing) {
-      return { duration: 1.8, ease: 'easeInOut' as const };
     }
     // Idle breathing cycle — slow and natural
     return { repeat: Infinity, duration: 5, ease: 'easeInOut' as const };
@@ -123,22 +112,19 @@ export function CharacterAvatar({
         transition={getTransition()}
         style={{ transformOrigin: 'bottom center' }}
       >
-        {/* Blink wrapper — CSS keyframe applies vertical squash from top */}
         <div
           style={{
             transform: facingLeft ? 'scaleX(-1)' : undefined,
-            transformOrigin: 'top center',
-            animation: 'aimo-blink 5s ease-in-out infinite',
           }}
         >
-          <Image
-            src="/characters/phil-default.png"
+          {/* eslint-disable-next-line @next/next/no-img-element -- sprite animation needs instant src switching without optimization overhead */}
+          <img
+            src={currentSprite}
             alt="Aimo"
             width={size}
             height={h}
             className="object-contain pointer-events-none"
             style={{ width: size, height: h }}
-            priority
             draggable={false}
           />
         </div>

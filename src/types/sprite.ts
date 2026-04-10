@@ -17,11 +17,11 @@ export const SPRITE_PRIORITY: Record<SpriteState, number> = {
 
 /** Per-state FPS configuration. */
 export const SPRITE_FPS: Record<SpriteState, number> = {
-  idle: 2,
+  idle: 0.5,
   blink: 10,
   walk: 8,
-  surprised: 6,
-  sit: 2,
+  surprised: 1,
+  sit: 1,
 };
 
 /** Metadata for a single sprite frame. */
@@ -32,19 +32,28 @@ export interface SpriteFrame {
   index: number;
 }
 
-/** Per-state frame count configuration (updated when assets arrive). */
+/** Per-state frame count — matches actual assets in public/sprites/. */
 export const SPRITE_FRAME_COUNTS: Record<SpriteState, number> = {
-  idle: 2,
-  blink: 3,
-  walk: 4,
-  surprised: 2,
-  sit: 2,
+  idle: 3,       // default + idle-1 + idle-2
+  blink: 2,      // blink-1 + blink-2
+  walk: 4,       // walk-1 through walk-4
+  surprised: 1,  // surprised (single frame)
+  sit: 1,        // sit (single frame)
 };
 
 /**
  * Build the image path for a given state and frame index.
- * Follows the `phil-{state}-{frame}.png` naming convention.
+ *
+ * Naming conventions:
+ * - idle frame 0 → phil-default.webp
+ * - idle frame N → phil-idle-N.webp
+ * - single-frame states → phil-{state}.webp
+ * - multi-frame states → phil-{state}-{1-based}.webp
  */
 export function spriteSrc(state: SpriteState, frame: number): string {
-  return `/sprites/phil-${state}-${frame}.png`;
+  if (state === 'surprised') return '/sprites/phil-surprised.webp';
+  if (state === 'sit') return '/sprites/phil-sit.webp';
+  if (state === 'idle' && frame === 0) return '/sprites/phil-default.webp';
+  if (state === 'idle') return `/sprites/phil-idle-${frame}.webp`;
+  return `/sprites/phil-${state}-${frame + 1}.webp`;
 }
