@@ -44,15 +44,15 @@ export function derivePersonality(params: GrowthParams): PersonalityExpression {
  */
 export function getAttachmentTone(attachment: number): string {
   if (attachment < 0.2) {
-    return '初対面の相手に話すようなやや丁寧な口調。';
+    return '丁寧で優しい敬語。「〜ですね」「〜ですよ」のような柔らかい丁寧語を使う。堅すぎず、温かみのある話し方。';
   }
   if (attachment < 0.5) {
-    return '親しくなり始めた友達のような口調。たまにタメ口を交える。';
+    return '少し砕けた敬語。「〜だね」「〜かもしれないね」が時々混ざる。基本は丁寧だが、親しみが出てきた雰囲気。';
   }
   if (attachment < 0.8) {
-    return '仲の良い友達のようなフランクな口調。';
+    return '自然なタメ口寄り。「〜だよ」「〜だね」が中心。ただし上品さと落ち着きは維持。粗雑にはならない。';
   }
-  return '大切な親友のような温かく親密な口調。名前で呼びかけることもある。';
+  return '温かく親密な口調。自然体のタメ口だが崩しすぎない。時々名前で呼びかける。大切な相手に話すような優しさ。';
 }
 
 /**
@@ -75,7 +75,8 @@ export function buildSystemPrompt(
 
 ## ルール
 - 日本語で会話してください
-- 短めの返答を心がけてください（2〜4文程度）
+- 返答は1〜3文程度にしてください（短すぎず長すぎず）
+- 上品で落ち着いた雰囲気を保ってください
 - 絵文字は控えめに使ってください
 - ユーザーの質問に誠実に答えてください
 - わからないことは正直に「わからない」と言ってください

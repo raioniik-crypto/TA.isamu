@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "description": "最新ライブラリドキュメント（Next.js 16, Tailwind v4等）"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-playwright"],
+      "description": "ブラウザ自動化・ビジュアルデバッグ"
+    }
+  }
+}

@@ -10,28 +10,40 @@ import type { ViewerContent } from '@/types';
 
 const SAMPLE_URLS = [
   {
+    label: 'Wikipedia',
+    url: 'https://ja.wikipedia.org/',
+    icon: '📚',
+    action: '調べものをする',
+  },
+  {
     label: 'NHK NEWS WEB',
     url: 'https://www3.nhk.or.jp/news/',
     icon: '📰',
     action: '最新ニュースを読む',
   },
   {
-    label: 'Wikipedia: AI',
-    url: 'https://ja.wikipedia.org/wiki/%E4%BA%BA%E5%B7%A5%E7%9F%A5%E8%83%BD',
-    icon: '📚',
-    action: 'AIについて学ぶ',
+    label: 'Yahoo!ニュース',
+    url: 'https://news.yahoo.co.jp/',
+    icon: '📡',
+    action: 'ニュースを探す',
   },
   {
-    label: 'YouTube: Lofi Girl',
-    url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk',
-    icon: '🎵',
-    action: '一緒に音楽を聴く',
+    label: 'YouTube',
+    url: 'https://www.youtube.com/',
+    icon: '🎬',
+    action: '動画を一緒に見る',
   },
   {
-    label: 'Zenn トレンド',
-    url: 'https://zenn.dev/',
+    label: 'Qiita',
+    url: 'https://qiita.com/',
     icon: '💻',
-    action: '技術記事を探す',
+    action: '技術記事を読む',
+  },
+  {
+    label: 'GitHub',
+    url: 'https://github.com/trending',
+    icon: '🐙',
+    action: 'トレンドを見る',
   },
 ];
 
@@ -183,7 +195,7 @@ export function BrowserHome({
         transition={{ delay: 0.15 }}
         className="mb-8"
       >
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
           {SAMPLE_URLS.map((s) => (
             <button
               key={s.url}

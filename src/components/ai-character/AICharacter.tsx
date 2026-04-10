@@ -9,7 +9,7 @@ import {
 } from 'framer-motion';
 import { CharacterAvatar } from './CharacterAvatar';
 import { ChatBubble } from './ChatBubble';
-import { ChatPanel } from '@/components/chat/ChatPanel';
+import CompactChat from '@/components/chat/CompactChat';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useChatStore } from '@/stores/chat-store';
 import { useViewerStore } from '@/stores/viewer-store';
@@ -17,6 +17,7 @@ import { useReactionStore } from '@/stores/reaction-store';
 import { useAIProfileStore } from '@/stores/ai-profile-store';
 import { useHydration } from '@/stores/use-hydration';
 import { pickReactionMessage } from '@/lib/reaction-messages';
+import { usePathname } from 'next/navigation';
 import type { CharacterExpression } from '@/types';
 
 /** Minimum interval between page reactions (ms) */
@@ -98,7 +99,9 @@ function findSnapTarget(
 export default function AICharacter() {
   // ── All hooks must be called unconditionally ──
   const isClient = useSyncExternalStore(() => () => {}, () => true, () => false);
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [greeting, setGreeting] = useState<string | null>(null);
   const [charSize, setCharSize] = useState(100);
@@ -276,6 +279,9 @@ export default function AICharacter() {
   // Hide floating character when YouTube companion viewer is active
   if (viewerContent?.type === 'youtube') return null;
 
+  // Hide on home when no content loaded (HomeCompanionCard takes over)
+  if (pathname === '/' && !viewerContent) return null;
+
   if (isMinimized) {
     return (
       <motion.button
@@ -345,7 +351,7 @@ export default function AICharacter() {
         }, 5000);
       }}
     >
-      {/* Chat panel */}
+      {/* Compact chat */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -353,21 +359,22 @@ export default function AICharacter() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="absolute right-0 w-[calc(100vw-2.5rem)] max-w-[400px]"
-            style={{ bottom: charH + 16 }}
+            className="absolute right-0"
+            style={{ bottom: charH + 12 }}
           >
-            <ChatPanel
-              onClose={() => setIsOpen(false)}
-              onMinimize={() => {
+            <CompactChat
+              expanded={expanded}
+              onToggleExpand={() => setExpanded((v) => !v)}
+              onClose={() => {
                 setIsOpen(false);
-                setIsMinimized(true);
+                setExpanded(false);
               }}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Chat bubble — reaction messages take priority over greeting */}
+      {/* Chat bubble — only when CompactChat is closed */}
       <ChatBubble
         message={reaction?.message ?? greeting}
         visible={!isOpen && !!(reaction?.message || greeting)}
@@ -383,7 +390,12 @@ export default function AICharacter() {
         facingLeft={facingLeft}
         onClick={() => {
           if (isDragging) return;
-          setIsOpen(!isOpen);
+          if (isOpen) {
+            setIsOpen(false);
+            setExpanded(false);
+          } else {
+            setIsOpen(true);
+          }
           setGreeting(null);
         }}
       />

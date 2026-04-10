@@ -1,41 +1,58 @@
 @AGENTS.md
 
-# AI協働ルール
+# いさむ株式会社 — Claude Code 運用規約
 
 ## 役割分担
-- **Claude Code（実装担当）**: コードの設計・実装・修正・リファクタリングを担当
-- **Codex（レビュー担当）**: コードレビュー・セキュリティチェック・バグ検出を担当。コードの直接編集は行わない
+- **Claude Code（実装担当）**: 調査・設計・実装・修正・リファクタリング・検証
+- **Codex（レビュー担当）**: コードレビュー・セキュリティチェック・バグ検出（コード直接編集なし）
 
-## ワークフロー
-1. Claude Codeが実装する
-2. キリのいいタイミングでcommit & push
-3. CodexがGitHub経由でレビュー
-4. Codexの指摘をClaude Codeに伝えて修正させる
-5. 繰り返し
+## 技術スタック
+- Next.js 16 (App Router) / TypeScript strict mode
+- Tailwind CSS v4（`globals.css`内の`@theme`で設定。`tailwind.config.*`は使わない）
+- Framer Motion / Zustand（localStorage persist + `useHydration()`）
+- uuid / styled-jsx
+- LLM: openai / anthropic / mock（`LLM_PROVIDER`環境変数で切替）
 
-# 開発ガイドライン
+## コマンド
+- `npm run dev` — 開発サーバー
+- `npm run build` — プロダクションビルド
+- `npm run lint` — ESLint
+- `npm run typecheck` — tsc --noEmit
+- 変更後は必ず3点セット: `npm run lint && npm run typecheck && npm run build`
 
-## 検証コマンド
-変更後は必ず以下を実行:
-```bash
-npm run lint       # ESLint
-npm run typecheck  # tsc --noEmit
-npm run build      # Next.js production build
-```
+## ディレクトリ規約
+- `src/app/` — ルート + APIルート
+- `src/components/` — UIコンポーネント（機能別サブフォルダ）
+- `src/lib/` — UIに依存しないロジック
+- `src/stores/` — Zustand + hydrationフック
+- `src/types/` — 共通型定義（`.ts`統一、`.d.ts`禁止）
 
-## Gotchas (既知の落とし穴)
+## ワークフロー（必ず従うこと）
+1. **探索**: コードベースを読んで現状把握
+2. **計画**: 変更内容を箇条書きで提示し確認を得る
+3. **実装**: 小さな単位で変更。1ファイルずつ
+4. **検証**: lint && typecheck && build
 
-詳細は `progress.md` を参照。以下は要点のみ:
+## Gotchas（違反厳禁）
+1. **Hydration**: browser-only値を初回レンダリングに混ぜない。`hydrated`ガード必須
+2. **next/dynamic**: named export + ssr:false はNext.js 16で壊れている。default exportを使う
+3. **React 19 lint**: useEffect内のsetStateは違反。useSyncExternalStoreを使う
+4. **framer-motion**: motionValue.set()は即座。animate()で滑らかに
+5. **SSRF**: redirect:'follow'禁止。redirect:'manual' + 手動追跡
+6. **AICharacter**: dynamic(ssr:false) + isClient + canDrag=hydrated&&isDesktop() の三重防御
+7. **Tailwind v4**: tailwind.config不使用。globals.css内@themeで設定
+8. **Zustand persist**: useHydration()でmismatch防御
 
-1. **Hydration**: browser-only 値 (`window.*`, `document.*`) を初回レンダリングに混ぜない。`hydrated` ガード必須。
-2. **next/dynamic**: named export + `ssr: false` は Next.js 16 で壊れている。default export を使う。
-3. **React 19 lint**: `useEffect(() => setState(...), [])` は `react-hooks/set-state-in-effect` に違反。`useSyncExternalStore` を使う。
-4. **framer-motion**: `motionValue.set()` は即座。滑らかな移動は `animate()` 関数を使う。
-5. **SSRF**: `redirect: 'follow'` はリダイレクト先が SSRF チェックをバイパスする。`redirect: 'manual'` + 手動追跡。
-6. **AICharacter**: client-only overlay。`dynamic(ssr: false)` + `isClient` ガード + `canDrag = hydrated && isDesktop()` の三重防御。
+## やってはいけないこと
+- 既存ファイル未確認で新規作成
+- テストなしで複雑ロジック実装
+- 1回で5ファイル以上同時編集
+- 依存関係を勝手に追加（確認必須）
+- .env.localの内容をログに含める
+- apiGuard()を外す
+- console.logをPRに残す
 
-## アーキテクチャ注意点
-- Tailwind CSS v4: `tailwind.config.*` ではなく `globals.css` 内の `@theme` で設定
-- Zustand stores: localStorage persist 使用。hydration mismatch を `useHydration()` で防御
-- LLM: `LLM_PROVIDER` 環境変数で openai/anthropic/mock を切替
-- セキュリティ: 全APIルートに `apiGuard()` 適用済み。`/api/debug-transcript` は本番で404
+## セキュリティ
+- 全APIルートにapiGuard()適用済み
+- /api/debug-transcriptは本番404
+- SSRF防御: isBlockedUrl() + 手動リダイレクト（最大5ホップ）
