@@ -68,6 +68,7 @@ export function useSpriteAnimation(): string {
     if (!playing) return;
 
     let blinkTimeout: ReturnType<typeof setTimeout>;
+    let blinkEndTimeout: ReturnType<typeof setTimeout>;
 
     const scheduleBlink = () => {
       const delay =
@@ -76,7 +77,7 @@ export function useSpriteAnimation(): string {
         activate('blink');
 
         // End blink after its duration
-        setTimeout(() => {
+        blinkEndTimeout = setTimeout(() => {
           deactivate('blink');
           scheduleBlink();
         }, BLINK_DURATION_MS);
@@ -84,7 +85,10 @@ export function useSpriteAnimation(): string {
     };
 
     scheduleBlink();
-    return () => clearTimeout(blinkTimeout);
+    return () => {
+      clearTimeout(blinkTimeout);
+      clearTimeout(blinkEndTimeout);
+    };
   }, [playing, activate, deactivate]);
 
   return spriteSrc(current, frame);
@@ -116,7 +120,7 @@ function useSyncState(
   activate: (s: SpriteState) => void,
   deactivate: (s: SpriteState) => void,
 ) {
-  const prevRef = useRef(active);
+  const prevRef = useRef(false);
   useEffect(() => {
     if (active && !prevRef.current) activate(state);
     if (!active && prevRef.current) deactivate(state);

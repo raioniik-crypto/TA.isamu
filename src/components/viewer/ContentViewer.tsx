@@ -125,6 +125,10 @@ function YouTubeEmbed({
   videoId: string;
   isTheater: boolean;
 }) {
+  // `start=0` makes it explicit that reload always starts from the beginning.
+  // The iframe DOM node is kept mounted by PersistentViewer, so navigating
+  // between routes does NOT remount this iframe and playback continues.
+  const src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&start=0`;
   return (
     <div
       className="relative w-full"
@@ -132,7 +136,7 @@ function YouTubeEmbed({
     >
       <iframe
         className="absolute inset-0 h-full w-full"
-        src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+        src={src}
         title="YouTube動画"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen

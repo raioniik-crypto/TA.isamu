@@ -20,12 +20,20 @@ export function ChatBubble({ message, visible, centered = false }: ChatBubblePro
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.85, y: 8 }}
           transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          className={`absolute bottom-[calc(100%+8px)] w-64 rounded-2xl bg-surface p-4 text-sm border border-border ${
-            centered ? 'left-1/2 -translate-x-1/2 rounded-b-md' : 'right-0 rounded-br-md'
+          className={`absolute bottom-[calc(100%+8px)] rounded-2xl bg-surface p-4 text-sm border border-border ${
+            centered
+              ? 'left-1/2 -translate-x-1/2 rounded-b-md'
+              : 'right-0 rounded-br-md'
           }`}
-          style={{ boxShadow: 'var(--shadow-md)' }}
+          style={{
+            boxShadow: 'var(--shadow-md)',
+            width: 'max-content',
+            maxWidth: 'min(18rem, calc(100vw - 2rem))',
+          }}
         >
-          <p className="text-foreground leading-relaxed">{message}</p>
+          <p className="text-foreground leading-relaxed break-words whitespace-pre-wrap">
+            {message}
+          </p>
           {/* 吹き出しの尻尾 */}
           <div className={`absolute -bottom-[6px] h-3 w-3 rotate-45 bg-surface border-r border-b border-border ${
             centered ? 'left-1/2 -translate-x-1/2' : 'right-5'

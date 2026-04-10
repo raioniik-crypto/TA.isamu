@@ -42,13 +42,15 @@ export default function ProfilePage() {
         {/* 性格カード */}
         <div className="mb-6 rounded-2xl border border-border bg-surface p-5 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-hover overflow-hidden">
+            <div className="relative flex h-14 w-14 shrink-0 items-start justify-center rounded-full bg-surface-hover overflow-hidden ring-1 ring-border">
               <Image
-                src="/characters/phil-default.png"
+                src="/sprites/phil-default.png"
                 alt={displayName}
-                width={48}
-                height={48}
-                className="object-contain"
+                width={120}
+                height={168}
+                className="pointer-events-none select-none max-w-none"
+                style={{ height: 'auto', width: '120%', marginTop: '-6%' }}
+                priority
               />
             </div>
             <div>

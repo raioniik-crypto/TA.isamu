@@ -276,8 +276,10 @@ export default function AICharacter() {
 
   if (!isClient) return null;
 
-  // Hide floating character when YouTube companion viewer is active
-  if (viewerContent?.type === 'youtube') return null;
+  // Hide floating character on home when CompanionViewer is showing
+  // (YouTube on home). On other routes we still want the character so the
+  // user can chat while the mini-player keeps the video playing.
+  if (pathname === '/' && viewerContent?.type === 'youtube') return null;
 
   // Hide on home when no content loaded (HomeCompanionCard takes over)
   if (pathname === '/' && !viewerContent) return null;

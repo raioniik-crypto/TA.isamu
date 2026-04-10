@@ -109,21 +109,7 @@ button, a, input, textarea {
   color: white;
 }
 
-/* Character blink animation — very subtle vertical squash (top-anchored) */
-@keyframes aimo-blink {
-  0%, 93%, 100% { transform: scaleY(1); }
-  95% { transform: scaleY(0.985); }
-  96% { transform: scaleY(0.97); }
-  97% { transform: scaleY(0.985); }
-}
-
-/* Idle glance — subtle head tilt implying the character is looking around */
-@keyframes aimo-glance {
-  0%, 100% { transform: rotate(0deg); }
-  30% { transform: rotate(2.5deg); }
-  60% { transform: rotate(-2deg); }
-  80% { transform: rotate(0.5deg); }
-}
+/* Legacy CSS character animations removed — now handled by sprite frame switching */
 
 /* Minimum font size on small screens */
 @media (max-width: 374px) {
