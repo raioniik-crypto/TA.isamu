@@ -76,7 +76,6 @@ export function HomeCompanionCard() {
   const [charSize, setCharSize] = useState(220);
   const [greeting, setGreeting] = useState<string | null>(null);
   const [chatValue, setChatValue] = useState('');
-  const [urlValue, setUrlValue] = useState('');
   const chatInputRef = useRef<HTMLInputElement>(null);
 
   const hydrated = useHydration();
@@ -245,30 +244,11 @@ export function HomeCompanionCard() {
     [setContent, setViewerLoading, setViewerError, addHistoryEntry],
   );
 
-  const looksLikeUrl = (v: string) => {
-    const trimmed = v.trim();
-    if (!trimmed) return false;
-    if (/^https?:\/\//i.test(trimmed)) return true;
-    // ドメインっぽい形 (x.y)
-    return /^[\w-]+(\.[\w-]+)+(\/.*)?$/i.test(trimmed);
-  };
-
   const handleChatSubmit = () => {
     const trimmed = chatValue.trim();
     if (!trimmed || isSending) return;
     handleChatSend(trimmed);
     setChatValue('');
-  };
-
-  const handleUrlSubmit = () => {
-    const trimmed = urlValue.trim();
-    if (!trimmed || isViewerLoading) return;
-    const finalUrl =
-      trimmed.startsWith('http://') || trimmed.startsWith('https://')
-        ? trimmed
-        : `https://${trimmed}`;
-    handleOpenUrl(finalUrl);
-    setUrlValue('');
   };
 
   const hasHistory = hydrated && historyEntries.length > 0;
@@ -293,62 +273,11 @@ export function HomeCompanionCard() {
         />
       </div>
 
-      {/* URL input — primary action */}
-      <div className="mt-6 w-full max-w-lg px-4">
+      {/* Chat input — talk to the character.
+          URL entry is handled by the always-visible BrowserBar in Header. */}
+      <div className="mt-5 w-full max-w-md px-4">
         <div
-          className="flex items-center rounded-2xl border border-border bg-surface overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all"
-          style={{ boxShadow: 'var(--shadow-md)' }}
-        >
-          <span className="pl-4 text-muted shrink-0">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-          </span>
-          <input
-            type="text"
-            value={urlValue}
-            onChange={(e) => setUrlValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (
-                e.key === 'Enter' &&
-                !e.nativeEvent.isComposing &&
-                urlValue.trim() &&
-                !isViewerLoading
-              ) {
-                e.preventDefault();
-                handleUrlSubmit();
-              }
-            }}
-            placeholder="URLを入力して一緒に見よう"
-            disabled={isViewerLoading}
-            className="min-w-0 flex-1 bg-transparent px-3 py-3.5 text-[15px] text-foreground placeholder:text-muted/50 focus:outline-none disabled:opacity-60"
-            autoComplete="off"
-            inputMode="url"
-          />
-          <button
-            onClick={handleUrlSubmit}
-            disabled={isViewerLoading || !urlValue.trim()}
-            className="shrink-0 mr-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-primary-dark active:scale-[0.97] disabled:opacity-40"
-          >
-            {isViewerLoading ? '…' : '開く'}
-          </button>
-        </div>
-      </div>
-
-      {/* Chat input — secondary: talk to the character */}
-      <div className="mt-3 w-full max-w-lg px-4">
-        <div
-          className="flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-2.5 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all"
+          className="flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all"
           style={{ boxShadow: 'var(--shadow-sm)' }}
         >
           <input
@@ -363,24 +292,12 @@ export function HomeCompanionCard() {
                 chatValue.trim()
               ) {
                 e.preventDefault();
-                // If it looks like a URL, route to URL open for convenience
-                if (looksLikeUrl(chatValue)) {
-                  const trimmed = chatValue.trim();
-                  const finalUrl =
-                    trimmed.startsWith('http://') ||
-                    trimmed.startsWith('https://')
-                      ? trimmed
-                      : `https://${trimmed}`;
-                  handleOpenUrl(finalUrl);
-                  setChatValue('');
-                  return;
-                }
                 handleChatSubmit();
               }
             }}
             placeholder={`${displayName}に話しかける…`}
             disabled={isSending}
-            className="min-w-0 flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted/50 focus:outline-none disabled:opacity-50"
+            className="min-w-0 flex-1 bg-transparent text-[15px] text-foreground placeholder:text-muted/50 focus:outline-none disabled:opacity-50"
             autoComplete="off"
           />
           <button
@@ -410,7 +327,7 @@ export function HomeCompanionCard() {
         </div>
       </div>
 
-      {/* Quick links */}
+      {/* Quick links — restored candidate UI */}
       <div className="mt-8 w-full max-w-2xl px-4">
         <p className="mb-3 text-center text-[12px] text-muted font-medium">
           おすすめリンクから始める
